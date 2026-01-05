@@ -1,0 +1,314 @@
+AUTONOMOUS MCP SYSTEM – FULL BUILD & WORKFLOW GUIDE (PART 2)
+=================================================================
+
+This document CONTINUES the previous guide.
+It goes deeper into:
+- Concrete execution loops
+- Stop-hook logic in detail
+- Learning & memory
+- Deployment
+- Scaling
+- Security
+- Roadmap to production
+
+This is written so Cloud Code or senior engineers can IMPLEMENT it.
+
+
+-------------------------------------------------
+11. THE CORE AUTONOMOUS EXECUTION LOOP (CANONICAL)
+-------------------------------------------------
+
+This loop is the HEART of the system.
+Nothing runs without it.
+
+PSEUDOCODE (CANONICAL):
+
+while True:
+    agent.perform_step()
+
+    write_logs()
+    update_state()
+
+    run_post_step_hooks()
+
+    decision = run_stop_hook()
+
+    if decision == CONTINUE:
+        continue
+
+    if decision == ESCALATE:
+        pause_execution()
+        wait_for_human()
+        if human_approved:
+            continue
+        else:
+            terminate()
+
+    if decision == TERMINATE:
+        finalize()
+        break
+
+
+ABSOLUTE RULE:
+- Agents NEVER decide termination.
+- ONLY the stop hook decides.
+
+
+-------------------------------------------------
+12. STOP HOOK – PRODUCTION DECISION TREE
+-------------------------------------------------
+
+The stop hook must be deterministic FIRST, intelligent SECOND.
+
+ORDER OF EVALUATION:
+
+1) HARD STOPS (NO EXCEPTIONS)
+-----------------------------
+- iteration_count > MAX_ITERS
+- elapsed_time > MAX_TIME
+- budget_exceeded
+- permission_violation
+→ TERMINATE
+
+2) SUCCESS TESTS
+----------------
+- unit tests pass
+- smoke tests pass
+- acceptance criteria satisfied
+→ TERMINATE (SUCCESS)
+
+3) KNOWN FAILURE WITH REMEDIATION
+--------------------------------
+- error matches known pattern
+- remediation exists
+- retry count < MAX_RETRIES
+→ CONTINUE
+
+4) UNKNOWN / RISKY FAILURE
+--------------------------
+- destructive action
+- high cost
+- unclear impact
+→ ESCALATE
+
+5) DEFAULT
+----------
+→ CONTINUE
+
+
+STOP HOOK OUTPUT EXAMPLE:
+
+{
+  "action": "continue",
+  "reason": "tests failing but known fix exists",
+  "confidence": 0.82,
+  "next_expected_state": "tests_pass"
+}
+
+
+-------------------------------------------------
+13. MEMORY & LEARNING (WHAT MAKES IT SMART)
+-------------------------------------------------
+
+Memory is NOT chat history.
+
+YOU MUST IMPLEMENT THESE MEMORY TYPES:
+
+1) SESSION MEMORY
+-----------------
+- What is currently running
+- Intermediate artifacts
+- Temporary variables
+
+2) OPERATIONAL MEMORY
+---------------------
+- Past failures
+- Past fixes
+- Success rates
+
+3) USER PREFERENCE MEMORY
+-------------------------
+- Voice vs text
+- Approval thresholds
+- Notification style
+
+4) ORGANIZATIONAL MEMORY
+------------------------
+- Ownership of workflows
+- Cost policies
+- SLAs
+
+Memory is READ by:
+- Planner agent
+- Stop hook
+- Debugger agent
+
+Memory is WRITTEN by:
+- Post-step hook
+- Debugger agent
+- Approval outcomes
+
+
+-------------------------------------------------
+14. SELF-IMPROVEMENT LOOP
+-------------------------------------------------
+
+Every failure becomes training data.
+
+AFTER TERMINATION:
+- Store failure → fix → outcome
+- Increase confidence score for future decisions
+- Decrease retries for low-value fixes
+
+This enables:
+- Faster convergence
+- Fewer escalations
+- Better autonomy over time
+
+
+-------------------------------------------------
+15. SECURITY & SAFETY (NON-OPTIONAL)
+-------------------------------------------------
+
+MANDATORY CONTROLS:
+
+- RBAC per user and per agent
+- Capability-based permissions for skills
+- Budget caps per session
+- Approval thresholds
+- Immutable audit logs
+
+NEVER:
+- Allow agent to escalate its own permissions
+- Allow stop hook override without authorization
+- Allow infinite loops
+
+EVERY ACTION MUST BE TRACEABLE:
+voice → transcript → plan → agent → skill → hook → result
+
+
+-------------------------------------------------
+16. DEPLOYMENT MODEL
+-------------------------------------------------
+
+RECOMMENDED SETUP:
+
+- MCP Orchestrator: containerized (Cloud Run / ECS / Kubernetes)
+- State store: Postgres + object storage
+- Queue / events: PubSub / SQS
+- UI: static web + WebSocket gateway
+- STT/TTS: managed cloud services
+
+WHY:
+- Stateless agents scale horizontally
+- State lives in DB
+- Hooks enforce safety centrally
+
+
+-------------------------------------------------
+17. SCALING STRATEGY
+-------------------------------------------------
+
+HORIZONTAL SCALING:
+- Each session = independent execution
+- Agents are stateless workers
+
+VERTICAL SCALING:
+- Heavy analysis delegated to cloud code
+- Debugging can spawn specialized agents
+
+BACKPRESSURE:
+- Queue length limits
+- Priority-based scheduling
+
+
+-------------------------------------------------
+18. OBSERVABILITY
+-------------------------------------------------
+
+YOU MUST HAVE:
+
+- Session timelines
+- Agent iteration counters
+- Hook decision logs
+- Confidence scores
+- Cost tracking
+
+Without observability:
+- Autonomy becomes dangerous
+
+
+-------------------------------------------------
+19. UI – ADVANCED USAGE
+-------------------------------------------------
+
+UI IS A CONTROL PANEL.
+
+FEATURES:
+- Voice commands
+- Live execution graph
+- Approve / reject buttons
+- Pause / resume
+- Explain-why button
+
+"Explain why" shows:
+- Planner reasoning
+- Hook decisions
+- Confidence levels
+
+
+-------------------------------------------------
+20. EXAMPLE REAL COMMAND
+-------------------------------------------------
+
+User says:
+"Keep fixing the deployment until it passes all tests, but ask me if cost goes above $50."
+
+SYSTEM DOES:
+- Planner creates plan
+- Executor runs deployment
+- Tests fail
+- Debugger applies fix
+- Stop hook sees cost < $50 → continue
+- Eventually tests pass → terminate
+- Voice summary sent
+
+
+-------------------------------------------------
+21. ROADMAP TO PRODUCTION
+-------------------------------------------------
+
+PHASE 1:
+- Single-user
+- Text input
+- Manual approvals
+
+PHASE 2:
+- Voice input
+- n8n integration
+- Automated debugging
+
+PHASE 3:
+- Multi-user
+- Org policies
+- Learning memory
+
+PHASE 4:
+- Cross-MCP collaboration
+- Delegated agents
+- Predictive automation
+
+
+-------------------------------------------------
+22. FINAL PRINCIPLES
+-------------------------------------------------
+
+- Autonomy is earned, not assumed
+- Stop hooks are sacred
+- Skills stay dumb
+- Agents stay focused
+- Humans stay in control
+- Systems must explain themselves
+
+
+END OF PART 2

@@ -1,0 +1,45 @@
+{
+  "updated_at": "2026-01-05T08:46:49.862343",
+  "preferences": [],
+  "approval_patterns": [
+    {
+      "action_type": "deploy",
+      "context_pattern": "production",
+      "approved_count": 3,
+      "denied_count": 0
+    }
+  ],
+  "feedback_history": [
+    {
+      "timestamp": "2026-01-05T08:46:49.860268",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    },
+    {
+      "timestamp": "2026-01-05T08:46:49.860964",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    },
+    {
+      "timestamp": "2026-01-05T08:46:49.861611",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    },
+    {
+      "timestamp": "2026-01-05T08:46:49.862181",
+      "type": "correction",
+      "wrong": "You asked too many questions",
+      "expected": "Just do it without asking",
+      "context": null
+    }
+  ]
+}

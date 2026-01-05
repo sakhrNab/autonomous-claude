@@ -1,0 +1,38 @@
+{
+  "updated_at": "2026-01-05T08:47:16.329681",
+  "preferences": [],
+  "approval_patterns": [
+    {
+      "action_type": "deploy",
+      "context_pattern": "production",
+      "approved_count": 3,
+      "denied_count": 0
+    }
+  ],
+  "feedback_history": [
+    {
+      "timestamp": "2026-01-05T08:47:16.328370",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    },
+    {
+      "timestamp": "2026-01-05T08:47:16.328951",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    },
+    {
+      "timestamp": "2026-01-05T08:47:16.329536",
+      "type": "approval",
+      "action_type": "deploy",
+      "context": "production",
+      "approved": true,
+      "details": null
+    }
+  ]
+}

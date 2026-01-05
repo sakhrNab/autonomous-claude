@@ -1,0 +1,264 @@
+AUTONOMOUS MCP MASTER GUIDE
+===========================
+
+This document is the MASTER AUTHORITY.
+It supersedes and orchestrates:
+- AUTONOMOUS MCP FULL GUIDE (Part 1)
+- AUTONOMOUS MCP FULL GUIDE (Part 2)
+
+Part 1 explains WHAT to build.
+Part 2 explains HOW it runs autonomously.
+THIS MASTER GUIDE explains:
+- HOW WORK IS TRACKED
+- HOW COMPLETION IS PROVEN
+- HOW AUTONOMY IS ENFORCED SAFELY
+- WHY THE SYSTEM CANNOT STOP WITHOUT A COMPLETED TO-DO
+
+This guide introduces the TASK LEDGER as a FIRST-CLASS SYSTEM COMPONENT.
+
+
+-------------------------------------------------
+1. CORE PRINCIPLE (NON-NEGOTIABLE)
+-------------------------------------------------
+
+THE SYSTEM IS NOT DONE UNTIL THE TO-DO IS DONE.
+
+No agent,
+no planner,
+no stop hook,
+no model
+
+is allowed to declare completion unless:
+- every task in the task ledger is completed
+- completion is verified
+- completion is recorded
+
+The TO-DO is the SINGLE SOURCE OF TRUTH for progress.
+
+
+-------------------------------------------------
+2. THE TASK LEDGER (THE BACKBONE)
+-------------------------------------------------
+
+The Task Ledger is a living, persistent plan.
+
+It exists as:
+- to-do.md (human-readable)
+- tasks.json (machine-readable, optional but recommended)
+
+The Task Ledger:
+- is created at the START of execution
+- is updated after EVERY meaningful action
+- is validated before termination
+- is audited permanently
+
+
+-------------------------------------------------
+3. WHEN THE TO-DO IS CREATED
+-------------------------------------------------
+
+IMMEDIATELY AFTER PLANNING.
+
+Flow:
+1) User intent received
+2) Planner Agent creates execution plan
+3) Planner Agent CREATES INITIAL TO-DO
+4) Execution begins
+
+If no to-do exists:
+→ EXECUTION IS FORBIDDEN
+
+
+-------------------------------------------------
+4. STRUCTURE OF to-do.md
+-------------------------------------------------
+
+REQUIRED FORMAT:
+
+# Task Ledger
+Session: <session_id>
+Created: <timestamp>
+
+## Core Tasks
+[ ] Architecture defined
+[ ] Subagents created
+[ ] Skills implemented
+[ ] Hooks implemented
+[ ] Stop hook validated
+[ ] Workflow engine integrated
+[ ] UI connected
+[ ] Safety & approvals verified
+[ ] Final system verification
+
+## Notes
+- Tasks may be expanded but never deleted
+- Completed tasks must include evidence
+
+
+-------------------------------------------------
+5. TASK STATES
+-------------------------------------------------
+
+Each task can be in EXACTLY ONE state:
+
+[ ] Pending
+[~] In Progress
+[x] Completed
+[!] Blocked
+
+Blocked tasks REQUIRE escalation.
+
+A task marked [x] MUST:
+- be verifiable
+- reference artifacts
+- pass validation
+
+
+-------------------------------------------------
+6. TASK MANAGER AGENT (NEW REQUIRED AGENT)
+-------------------------------------------------
+
+RESPONSIBILITY:
+- Own the Task Ledger
+- Validate task transitions
+- Prevent premature completion
+
+ONLY the Task Manager Agent may:
+- mark tasks complete
+- unblock tasks
+- approve task evidence
+
+All other agents MUST REQUEST updates.
+
+
+-------------------------------------------------
+7. TASK SKILLS (MANDATORY)
+-------------------------------------------------
+
+The following skills MUST exist:
+
+- create_task_ledger
+- update_task_status
+- append_task_notes
+- verify_task_completion
+- list_remaining_tasks
+
+These skills are called by agents BUT validated by the Task Manager.
+
+
+-------------------------------------------------
+8. INTEGRATION WITH PART 1 (AGENTS & SKILLS)
+-------------------------------------------------
+
+Planner Agent:
+- Creates initial tasks
+- Expands tasks if complexity increases
+
+Executor / Debugger / Monitor Agents:
+- Perform work
+- Submit completion evidence
+
+Approval Agent:
+- Unblocks tasks
+- Approves risky task completion
+
+
+-------------------------------------------------
+9. INTEGRATION WITH PART 2 (STOP HOOK)
+-------------------------------------------------
+
+THE STOP HOOK MUST ALWAYS:
+
+1) Check hard safety limits
+2) Check success criteria
+3) CHECK TASK LEDGER
+
+STOP HOOK RULE:
+
+IF any task != Completed:
+    action = CONTINUE
+    reason = "tasks_remaining"
+
+ONLY WHEN:
+- all tasks == Completed
+- final verification task == Completed
+
+→ TERMINATE IS ALLOWED
+
+
+-------------------------------------------------
+10. COMPLETION ENFORCEMENT (CRITICAL)
+-------------------------------------------------
+
+Final termination requires:
+
+- All tasks marked [x]
+- Final verification task completed
+- Stop hook confirmation
+- Audit log entry
+
+No exceptions.
+No overrides without authorization.
+
+
+-------------------------------------------------
+11. FAILURE & RECOVERY
+-------------------------------------------------
+
+If a task fails:
+- Mark [!] Blocked
+- Add reason
+- Escalate via Approval Agent
+
+If fix applied:
+- Mark [~] In Progress
+- Retry
+- Re-verify
+
+
+-------------------------------------------------
+12. WHY THIS MAKES AUTONOMY SAFE
+-------------------------------------------------
+
+Without a task ledger:
+- Models guess completion
+- Errors go unnoticed
+- Autonomy is dangerous
+
+With a task ledger:
+- Progress is explicit
+- Completion is provable
+- Humans can audit
+- Stop hook is grounded in reality
+
+
+-------------------------------------------------
+13. FINAL EXECUTION FLOW (MASTER)
+-------------------------------------------------
+
+1) Intent received
+2) Planner creates plan
+3) Task Ledger created
+4) Subagents execute tasks
+5) Skills perform work
+6) Tasks updated continuously
+7) Stop hook enforces:
+   - safety
+   - success
+   - task completion
+8) Final verification task passes
+9) Termination allowed
+10) Voice + UI summary delivered
+
+
+-------------------------------------------------
+14. FINAL LAW OF THE SYSTEM
+-------------------------------------------------
+
+IF THE TO-DO IS NOT DONE,
+THE SYSTEM IS NOT DONE.
+
+This rule is absolute.
+
+
+END OF MASTER GUIDE

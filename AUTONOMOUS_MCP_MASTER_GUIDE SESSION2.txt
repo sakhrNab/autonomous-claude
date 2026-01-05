@@ -1,0 +1,85 @@
+# Task Ledger
+Session: autonomous-mcp-build-002
+Created: 2026-01-04T01:00:00Z
+Updated: 2026-01-04T01:00:00Z
+
+## Core Tasks – Next Phase
+
+[x] Previous 21 tasks from MASTER GUIDE fully completed
+    Evidence: See autonomous-mcp-build-001 to-do.md
+
+## Conversation & Cloud Code Integration Tasks
+
+[ ] Conversation model defined
+    Evidence: conversation_agent.py + conversation_store.py implemented
+    Notes: Messages (voice/text) are first-class, threaded, and timestamped. Must always link to tasks.
+
+[ ] Message schema implemented
+    Evidence: message_store.py + message objects defined with fields: ID, timestamp, user, content, type, session, linked_tasks
+
+[ ] Conversation Agent implemented
+    Evidence: conversation_agent.py - Receives messages, stores them, routes to Planner Agent, updates task ledger continuously
+
+[ ] Message routing skill implemented
+    Evidence: skills/route_message.py - Determines which MCP, workflow, skill, or hook to call for each message
+
+[ ] Cloud Code adapter implemented
+    Evidence: core/cloud_code_adapter.py - Handles remote Cloud Code triggers, passes message/task context, receives results
+
+[ ] Chat-first UI implemented
+    Evidence: ui/chat_ui.py - Displays chat bubbles, voice/text messages, streaming replies, message-linked task updates
+
+[ ] Chat → workflow → chat loop validated
+    Evidence: End-to-end test: sending message triggers Planner → Agents → Skills → Cloud Code → results → reply
+
+[ ] Scheduler integration implemented (optional)
+    Evidence: Messages or scheduled triggers automatically invoke workflows/MCPs in Cloud Code
+
+[ ] Decision Agent implemented
+    Evidence: agents/decision_agent.py - Chooses correct Agent / Skill / Hook to execute a task or respond to a message. Works dynamically, consults task ledger.
+
+[ ] Task Ledger continuous update implemented
+    Evidence: conversation_agent.py + all agents call Task Manager Agent after completing each subtask or message-linked task.
+    Notes: Each completed step automatically updates the to-do. Stop Hook reads task ledger live.
+
+[ ] Message-linked task enforcement
+    Evidence: conversation_agent.py + planner_agent.py - All messages generate linked tasks; Stop Hook cannot terminate until all linked tasks are complete.
+
+[ ] Remote MCP orchestration verified
+    Evidence: cloud_code_adapter.py + route_message.py - For each message, correct remote MCP or workflow is triggered automatically, results returned, task ledger updated.
+
+## Principles
+
+- Every message triggers Planner → Agents → Skills → (Remote) Cloud Code.  
+- Task Ledger updates **immediately** after any action, not just at the end.  
+- Stop Hook evaluates **task ledger live** and message-linked tasks before termination.  
+- Decision Agent dynamically selects which agent/skill/hook to run for any message or subtask.  
+- Messages are **first-class**, threaded, and always linked to tasks.  
+- Cloud Code runs **remotely**, fully autonomously.  
+- Conversation Agent coordinates between user, orchestrator, and Cloud Code.  
+- Task Ledger remains **single source of truth**; no task completes without evidence.  
+
+## Artifacts to Create / Update
+
+- conversation_agent.py
+- conversation_store.py
+- message_store.py
+- skills/route_message.py
+- core/cloud_code_adapter.py
+- ui/chat_ui.py
+- agents/decision_agent.py
+
+## Notes
+
+- Tasks may be expanded but never deleted.  
+- Completed tasks must include evidence.  
+- ALL TASKS MUST UPDATE THE TO-DO CONTINUOUSLY.  
+- Tasks and linked messages can be paused and resumed; Stop Hook ensures nothing is skipped.  
+- This phase adds **conversation layer, decision-making, Cloud Code orchestration**, but preserves all prior MCP orchestration.  
+
+## Summary
+
+- Total Tasks: 12 new tasks (conversation + Cloud Code layer)  
+- Each task updates Task Ledger continuously upon completion  
+- Stop Hook reads Task Ledger live, cannot terminate until all tasks (including message-linked tasks) are complete  
+- System is now **conversation-driven**, fully autonomous, and Cloud Code integrated

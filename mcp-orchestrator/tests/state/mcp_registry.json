@@ -1,0 +1,8 @@
+{
+  "installed": [
+    "postgresql",
+    "playwright"
+  ],
+  "server_count": 13,
+  "last_updated": "2026-01-05T09:01:48.849413"
+}

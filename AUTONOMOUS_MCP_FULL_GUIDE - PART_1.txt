@@ -1,0 +1,405 @@
+AUTONOMOUS MCP SYSTEM – FULL BUILD & WORKFLOW GUIDE
+=================================================
+
+This document is a COMPLETE, LINEAR GUIDE explaining:
+- What this system is
+- What subagents to create
+- What skills to create
+- What hooks (especially STOP HOOK) to create
+- How the workflow operates end-to-end
+- How Cloud Code continuously executes until completion
+- How UI, autonomy, safety, and scaling work together
+
+This is written so you (or Cloud Code) can FOLLOW IT STEP BY STEP.
+
+
+-------------------------------------------------
+1. WHAT YOU ARE BUILDING (MENTAL MODEL)
+-------------------------------------------------
+
+You are building an AUTONOMOUS, VOICE-FIRST MCP ORCHESTRATOR.
+
+This is NOT a chat app.
+This is NOT just an agent.
+
+This is:
+- A conversational CONTROL PLANE for cloud code and workflows
+- A system that turns voice/text into:
+  - plans
+  - subagents
+  - skills
+  - executions
+- A system that keeps running UNTIL THE TASK IS ACTUALLY DONE
+- A system that can pause, retry, debug, escalate, or terminate safely
+
+Core loop:
+User intent → Plan → Subagents → Skills → Cloud code/workflows
+→ Stop Hook Decision → Continue OR Stop OR Escalate
+
+
+-------------------------------------------------
+2. HIGH-LEVEL ARCHITECTURE
+-------------------------------------------------
+
+CLIENT (Web / Mobile)
+  - Voice input
+  - Text fallback
+  - Timeline view
+  - Approvals UI
+  - Voice summaries
+
+↓ (WebSocket / HTTP)
+
+GATEWAY
+  - Auth
+  - Rate limiting
+  - Session creation
+  - Streaming events
+
+↓
+MCP ORCHESTRATOR (THE BRAIN)
+  - Planner
+  - Agent Manager
+  - State Store
+  - Hook Runner
+
+↓
+SUBAGENTS
+  - Small, focused roles
+
+↓
+SKILLS
+  - Atomic capabilities
+
+↓
+CLOUD CODE / WORKFLOWS
+  - n8n
+  - Pipelines
+  - External services
+
+↺ (feedback loop via hooks)
+
+Link to check agents and hooks: https://github.com/anthropics/claude-code
+link to check skills: https://github.com/anthropics/skills
+
+Fetch the links to know how to create the agents and skills and hooks correctly. the loop hook is inside a plugin called ralph-wiggum.
+-------------------------------------------------
+3. REQUIRED CORE COMPONENTS (FILES & FOLDERS)
+-------------------------------------------------
+
+/mcp-orchestrator
+  /agents
+    agent_manager.py
+    planner_agent.py
+    executor_agent.py
+    monitor_agent.py
+    debugger_agent.py
+    approval_agent.py
+
+  /skills
+    run_pipeline.py
+    run_workflow.py
+    query_status.py
+    fetch_logs.py
+    apply_fix.py
+    send_notification.py
+    speech_to_text.py
+    text_to_speech.py
+
+  /hooks
+    stop_hook.py
+    pre_step_hook.py
+    post_step_hook.py
+    approval_hook.py
+
+  /state
+    sessions.db
+    memory.db
+    audit.log
+
+  /ui
+    voice_ui
+    timeline_ui
+
+  to-do.md
+  architecture.md
+  README.md
+
+
+-------------------------------------------------
+4. SUBAGENTS (WHAT TO CREATE AND WHY)
+-------------------------------------------------
+
+Each subagent MUST have ONE responsibility.
+
+1) PLANNER AGENT
+----------------
+Responsibility:
+- Turn user intent into an executable plan
+
+Inputs:
+- User message (voice → text)
+- Session context
+- User permissions
+
+Outputs:
+- Ordered list of steps:
+  - which subagent
+  - which skill
+  - with which arguments
+
+Example output:
+[
+  { agent: "executor", skill: "run_pipeline", args: {...} },
+  { agent: "monitor", skill: "query_status", args: {...} }
+]
+
+2) EXECUTOR AGENT
+-----------------
+Responsibility:
+- Execute actions (pipelines, workflows, API calls)
+
+Never:
+- Decide if task is done
+- Decide if it should continue
+
+Only:
+- Do the work via skills
+- Report results
+
+3) MONITOR AGENT
+----------------
+Responsibility:
+- Observe long-running jobs
+- Check statuses
+- Detect anomalies
+
+Used when:
+- Pipelines
+- Scheduled workflows
+- Async jobs
+
+4) DEBUGGER AGENT
+-----------------
+Responsibility:
+- Analyze failures
+- Read logs
+- Propose fixes
+- Apply fixes via skills
+
+Triggered when:
+- Execution fails
+- Tests fail
+- Stop hook requests remediation
+
+5) APPROVAL AGENT
+-----------------
+Responsibility:
+- Ask human approval
+- Pause execution
+- Resume or terminate based on response
+
+Used for:
+- Costly actions
+- Destructive actions
+- Policy violations
+
+
+-------------------------------------------------
+5. SKILLS (SUPERPOWERS)
+-------------------------------------------------
+
+Skills are ATOMIC.
+They DO NOT plan.
+They DO NOT loop.
+
+Each skill:
+- Takes arguments
+- Does one thing
+- Returns structured output
+
+CORE SKILLS TO IMPLEMENT:
+
+- run_pipeline
+  Triggers cloud code or CI/CD pipeline
+
+- run_workflow
+  Triggers n8n / Temporal / Prefect workflow
+
+- query_status
+  Gets status of running job
+
+- fetch_logs
+  Retrieves logs/artifacts
+
+- apply_fix
+  Applies known remediation (config change, retry, patch)
+
+- send_notification
+  Sends message (Slack, email, voice reply)
+
+- speech_to_text
+  Converts voice → text
+
+- text_to_speech
+  Converts text → voice
+
+
+-------------------------------------------------
+6. HOOKS (CRITICAL PART)
+-------------------------------------------------
+
+Hooks run OUTSIDE the agent logic.
+They control SAFETY and AUTONOMY.
+
+-------------------------------------------------
+6.1 STOP HOOK (MOST IMPORTANT)
+-------------------------------------------------
+
+The STOP HOOK decides:
+- continue
+- terminate
+- escalate
+
+It runs AFTER EACH AGENT ITERATION.
+
+INPUTS:
+- session_id
+- agent_id
+- iteration number
+- logs
+- test results
+- permissions
+- time spent
+
+OUTPUT (JSON):
+{
+  "action": "continue" | "terminate" | "escalate",
+  "reason": "...",
+  "confidence": 0.0 - 1.0
+}
+
+STOP CONDITIONS (MANDATORY):
+- max_iterations
+- max_time
+- budget limits
+- permission violations
+
+LOGIC:
+IF success criteria met:
+  → terminate
+IF fixable failure:
+  → continue
+IF risky / unknown:
+  → escalate
+
+This is what enables:
+"CONTINUE CODING UNTIL IT IS ACTUALLY DONE"
+
+
+-------------------------------------------------
+6.2 PRE-STEP HOOK
+-------------------------------------------------
+Runs before each agent step.
+
+Uses:
+- Permission checks
+- Dry-run enforcement
+- Budget checks
+
+-------------------------------------------------
+6.3 POST-STEP HOOK
+-------------------------------------------------
+Runs after skill execution.
+
+Uses:
+- Test execution
+- Artifact validation
+- Result normalization
+
+-------------------------------------------------
+6.4 APPROVAL HOOK
+-------------------------------------------------
+Blocks execution until:
+- Human approves
+- Or rejects
+- Or times out
+
+
+-------------------------------------------------
+7. WORKFLOW (END-TO-END)
+-------------------------------------------------
+
+1) User sends voice message
+2) speech_to_text skill converts it
+3) Planner Agent creates plan
+4) MCP Orchestrator spawns subagents
+5) Executor Agent runs first skill
+6) Post-step hook runs tests
+7) Stop hook evaluates state
+
+IF continue:
+  → next iteration
+IF escalate:
+  → Approval Agent + UI
+IF terminate:
+  → Final summary
+
+8) text_to_speech generates voice summary
+9) UI shows timeline + results
+
+
+-------------------------------------------------
+8. UI HOW YOU USE IT
+-------------------------------------------------
+
+UI is NOT chat-only.
+
+It includes:
+- Voice button
+- Timeline of actions
+- Live progress
+- Approve / Reject buttons
+- Retry / Pause / Stop
+
+You can say:
+"Fix the failing pipeline and keep trying until it passes."
+
+And the system WILL:
+- Retry
+- Debug
+- Patch
+- Re-run
+- Stop only when tests pass or human intervenes
+
+
+-------------------------------------------------
+9. WHY THIS SYSTEM IS "HUGE"
+-------------------------------------------------
+
+Because it:
+- Replaces dashboards
+- Replaces runbooks
+- Replaces manual ops
+- Runs 24/7
+- Learns from failures
+- Talks back in voice
+- Knows when to stop
+
+This is NOT automation.
+This is AUTONOMOUS OPERATIONS.
+
+
+-------------------------------------------------
+10. FINAL RULES (NON-NEGOTIABLE)
+-------------------------------------------------
+
+- Every loop must have a stop hook
+- Every risky action must be approvable
+- Every decision must be logged
+- Every skill must be atomic
+- Every agent must have one role
+- Autonomy WITHOUT SAFETY is forbidden
+
+
+END OF DOCUMENT
