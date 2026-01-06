@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Operator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-bubble { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tooltip { position: relative; }
+        .tooltip:hover .tooltip-text { display: block; }
+        .tooltip-text { display: none; position: absolute; z-index: 10; background: #1f2937; padding: 8px 12px; border-radius: 6px; font-size: 12px; width: 250px; left: 0; top: 100%; margin-top: 4px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header with Help and System Controls -->
+        <header class="mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-400">Autonomous Operator</h1>
+                <p class="text-gray-400">Tell me what you need. I'll figure out the rest.</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="showFeedback()" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg text-sm" title="Report an issue or give feedback">
+                    Report Issue
+                </button>
+                <button onclick="showTerminal()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm" title="Run terminal commands">
+                    Terminal
+                </button>
+                <button onclick="showHelp()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">
+                    ? Help
+                </button>
+            </div>
+        </header>
+
+        <!-- Feedback Modal (Self-Healing) -->
+        <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-yellow-400">Report Issue / Give Feedback</h2>
+                    <button onclick="hideFeedback()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <p class="text-gray-400 text-sm mb-4">
+                    Describe the issue you're experiencing. The system will use Claude Code to analyze and fix it automatically.
+                </p>
+
+                <form id="feedback-form" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-300 mb-1">What's the issue?</label>
+                        <textarea id="feedback-issue" class="w-full bg-gray-700 px-3 py-2 rounded h-24" placeholder="Describe what's wrong or what you'd like to improve..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 mb-1">Error logs (optional)</label>
+                        <textarea id="feedback-logs" class="w-full bg-gray-700 px-3 py-2 rounded h-20 font-mono text-xs" placeholder="Paste any error messages here..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 mb-1">Affected file (optional)</label>
+                        <input type="text" id="feedback-file" class="w-full bg-gray-700 px-3 py-2 rounded" placeholder="e.g., api/server.py">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-2 rounded font-semibold">
+                            Fix It with Claude Code
+                        </button>
+                        <button type="button" onclick="hideFeedback()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+
+                <div id="feedback-result" class="hidden mt-4 p-4 bg-gray-900 rounded">
+                    <div class="text-blue-400 animate-pulse" id="feedback-status">Analyzing issue with Claude Code...</div>
+                    <pre id="feedback-output" class="text-gray-300 text-sm mt-2 whitespace-pre-wrap hidden"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Modal -->
+        <div id="terminal-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-800 rounded-lg p-6 max-w-3xl w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-green-400">Terminal</h2>
+                    <button onclick="hideTerminal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <div id="terminal-output" class="bg-black p-4 rounded font-mono text-sm h-64 overflow-y-auto mb-4 text-green-400">
+                    <div>$ Ready for commands...</div>
+                </div>
+
+                <form id="terminal-form" class="flex gap-2">
+                    <span class="text-green-400 py-2">$</span>
+                    <input type="text" id="terminal-input" class="flex-1 bg-gray-700 px-3 py-2 rounded font-mono" placeholder="Enter command..." autocomplete="off">
+                    <button type="submit" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded">Run</button>
+                </form>
+
+                <div class="flex gap-2 mt-4">
+                    <button onclick="runQuickCommand('pip install playwright')" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">Install Playwright</button>
+                    <button onclick="runQuickCommand('playwright install chromium')" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">Setup Browser</button>
+                    <button onclick="restartServer()" class="text-xs bg-red-700 hover:bg-red-600 px-3 py-1 rounded">Restart Server</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-800 rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-blue-400">How to Use This System</h2>
+                    <button onclick="hideHelp()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <div class="space-y-6 text-gray-300">
+                    <section>
+                        <h3 class="text-lg font-semibold text-white mb-2">What is the Autonomous Operator?</h3>
+                        <p>This is an AI-powered system that can execute tasks on your behalf. You describe what you want done in natural language, and it figures out which tools (MCPs) to use and how to accomplish it.</p>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-semibold text-white mb-2">The Tabs Explained</h3>
+                        <ul class="space-y-2">
+                            <li><strong class="text-blue-400">Tasks:</strong> Your task ledger. Shows all tasks you've created, their status, and lets you run/complete/delete them.</li>
+                            <li><strong class="text-blue-400">MCPs:</strong> Model Context Protocol servers - these are the tools the system uses (browser automation, database queries, web search, etc.). Install the ones you need.</li>
+                            <li><strong class="text-blue-400">Schedule:</strong> Set up recurring tasks that run automatically (daily backups, hourly checks, etc.).</li>
+                            <li><strong class="text-blue-400">Logs:</strong> Detailed logs of what the system is doing - see exactly what happens when tasks run.</li>
+                            <li><strong class="text-blue-400">Settings:</strong> Configure how autonomous the system should be.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-semibold text-white mb-2">Example Use Cases</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><strong>"Scrape product prices from amazon.com"</strong> → Uses Playwright MCP to browse and extract data</li>
+                            <li><strong>"Query the database for active users"</strong> → Uses PostgreSQL MCP to run SQL</li>
+                            <li><strong>"Search the web for Python tutorials"</strong> → Uses Brave Search MCP</li>
+                            <li><strong>"Send a notification to Slack"</strong> → Uses Slack MCP</li>
+                            <li><strong>"Create an n8n workflow for data processing"</strong> → Uses n8n MCP for automation</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-semibold text-white mb-2">Task States</h3>
+                        <ul class="space-y-1 text-sm">
+                            <li><span class="text-yellow-400">○ pending</span> - Waiting to be executed</li>
+                            <li><span class="text-blue-400">◐ in_progress</span> - Currently running</li>
+                            <li><span class="text-red-400">! blocked</span> - Cannot run (usually missing an MCP)</li>
+                            <li><span class="text-green-400">✓ completed</span> - Finished successfully</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="text-lg font-semibold text-white mb-2">Quick Start</h3>
+                        <ol class="list-decimal list-inside space-y-1 text-sm">
+                            <li>Type what you want done in the chat box above</li>
+                            <li>Go to Tasks tab and click "Run" on your task</li>
+                            <li>If blocked, go to MCPs tab and install the required MCP</li>
+                            <li>Go back to Tasks and click "Retry"</li>
+                            <li>When done, click "Done" to mark complete</li>
+                        </ol>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status" class="bg-gray-800 rounded-lg p-4 mb-6 flex justify-between items-center">
+            <div>
+                <span class="text-green-400">●</span>
+                <span class="ml-2">System Ready</span>
+            </div>
+            <div class="flex gap-4 text-gray-400 text-sm">
+                <span><span id="task-count">0</span> tasks</span>
+                <span><span id="mcp-count">0</span> MCPs installed</span>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-4 h-80 overflow-y-auto" id="chat-container">
+            <div class="chat-bubble bg-blue-600 text-white p-3 rounded-lg mb-4 max-w-xl">
+                <p>Hello! I'm your autonomous operator. Tell me what you want to accomplish.</p>
+                <p class="text-sm text-blue-200 mt-2">Examples: "Scrape headlines from bbc.com", "Query users from the database", "Search for AI news"</p>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <form id="task-form" class="flex gap-2 mb-4">
+            <input type="text" id="intent-input"
+                class="flex-1 bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="What do you need? (e.g., 'Scrape headlines from bbc.com', 'Search for AI news')"
+                autocomplete="off">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition">
+                Send
+            </button>
+        </form>
+
+        <!-- Quick Search Suggestions - GENERAL PURPOSE -->
+        <div class="flex flex-wrap gap-2 mb-8">
+            <span class="text-gray-500 text-sm">Try:</span>
+            <button onclick="quickSearch('Scrape headlines from bbc.com')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-full text-sm text-gray-300 transition">
+                BBC Headlines
+            </button>
+            <button onclick="quickSearch('Scrape headlines from techcrunch.com')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-full text-sm text-gray-300 transition">
+                Tech News
+            </button>
+            <button onclick="quickSearch('Scrape content from cnn.com')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-full text-sm text-gray-300 transition">
+                CNN News
+            </button>
+            <button onclick="quickSearch('Scrape articles from medium.com')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-full text-sm text-gray-300 transition">
+                Medium
+            </button>
+            <button onclick="quickSearch('Scrape news from reuters.com')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-full text-sm text-gray-300 transition">
+                Reuters
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-4 border-b border-gray-700 flex-wrap">
+            <button onclick="showTab('tasks')" class="tab-btn px-4 py-2 text-blue-400 border-b-2 border-blue-400">Tasks</button>
+            <button onclick="showTab('mcps')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white">MCPs</button>
+            <button onclick="showTab('schedule')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white">Schedule</button>
+            <button onclick="showTab('logs')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white">Logs</button>
+            <button onclick="showTab('settings')" class="tab-btn px-4 py-2 text-gray-400 hover:text-white">Settings</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content" class="bg-gray-800 rounded-lg p-4">
+            <!-- Tasks Tab -->
+            <div id="tasks-tab">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Results</h2>
+                    <button onclick="clearAllTasks()" class="text-red-400 hover:text-red-300 text-sm">Clear All</button>
+                </div>
+                <div id="task-list" class="space-y-2"></div>
+            </div>
+
+            <!-- MCPs Tab -->
+            <div id="mcps-tab" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Available MCPs (Model Context Protocol Servers)</h2>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">MCPs are tools the system uses to interact with external services. Install the ones you need for your tasks.</p>
+                <div id="mcp-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- Schedule Tab -->
+            <div id="schedule-tab" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Scheduled Tasks</h2>
+                    <button onclick="showScheduleForm()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">+ New Schedule</button>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">Set up tasks to run automatically at specified times or intervals.</p>
+                <div id="schedule-list" class="space-y-2"></div>
+
+                <!-- Schedule Form (hidden by default) -->
+                <div id="schedule-form" class="hidden mt-4 bg-gray-700 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3">Create Scheduled Task</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="schedule-name" placeholder="Task name (e.g., 'Daily Backup')" class="w-full bg-gray-600 px-3 py-2 rounded">
+                        <input type="text" id="schedule-intent" placeholder="What to do (e.g., 'backup the database')" class="w-full bg-gray-600 px-3 py-2 rounded">
+                        <select id="schedule-type" class="w-full bg-gray-600 px-3 py-2 rounded">
+                            <option value="once">Run Once</option>
+                            <option value="daily">Daily</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                        <input type="time" id="schedule-time" class="w-full bg-gray-600 px-3 py-2 rounded">
+                        <div class="flex gap-2">
+                            <button onclick="createSchedule()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Create</button>
+                            <button onclick="hideScheduleForm()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div id="logs-tab" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">System Logs</h2>
+                    <button onclick="loadLogs()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm">Refresh</button>
+                </div>
+                <p class="text-gray-400 text-sm mb-4">Detailed logs showing what the system is doing. Useful for debugging.</p>
+                <div id="logs-list" class="space-y-1 font-mono text-sm max-h-96 overflow-y-auto"></div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="hidden">
+                <h2 class="text-xl font-semibold mb-4">Preferences</h2>
+                <p class="text-gray-400 text-sm mb-4">Configure how the autonomous operator behaves.</p>
+                <form id="settings-form" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 mb-2">Risk Tolerance</label>
+                        <select id="risk-tolerance" class="bg-gray-700 px-4 py-2 rounded w-full">
+                            <option value="low">Low - Ask before anything risky</option>
+                            <option value="medium" selected>Medium - Ask for high-risk only</option>
+                            <option value="high">High - Trust me, just do it</option>
+                        </select>
+                        <p class="text-gray-500 text-xs mt-1">Controls how much confirmation the system needs before taking actions.</p>
+                    </div>
+                    <div>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="auto-install" class="w-4 h-4">
+                            <span>Auto-install MCPs when needed</span>
+                        </label>
+                        <p class="text-gray-500 text-xs mt-1">If enabled, MCPs will be installed automatically when a task needs them.</p>
+                    </div>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                        Save Preferences
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let ws;
+
+        // Help modal
+        function showHelp() { document.getElementById('help-modal').classList.remove('hidden'); }
+        function hideHelp() { document.getElementById('help-modal').classList.add('hidden'); }
+
+        // Feedback modal (Self-Healing)
+        function showFeedback() { document.getElementById('feedback-modal').classList.remove('hidden'); }
+        function hideFeedback() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            document.getElementById('feedback-result').classList.add('hidden');
+        }
+
+        // Terminal modal
+        function showTerminal() { document.getElementById('terminal-modal').classList.remove('hidden'); }
+        function hideTerminal() { document.getElementById('terminal-modal').classList.add('hidden'); }
+
+        // Cancel task
+        async function cancelTask(id) {
+            const res = await fetch(API + `/api/tasks/${id}/cancel`, { method: 'POST' });
+            const data = await res.json();
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML += `<div class="chat-bubble ${data.success ? 'bg-yellow-600' : 'bg-red-600'} text-white p-3 rounded-lg mb-4 max-w-xl">
+                ${data.success ? 'Task cancelled' : data.message}
+            </div>`;
+            chat.scrollTop = chat.scrollHeight;
+            loadTasks();
+        }
+
+        // Submit feedback for self-healing
+        document.getElementById('feedback-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const issue = document.getElementById('feedback-issue').value.trim();
+            const logs = document.getElementById('feedback-logs').value.trim();
+            const file = document.getElementById('feedback-file').value.trim();
+
+            if (!issue) { alert('Please describe the issue'); return; }
+
+            document.getElementById('feedback-result').classList.remove('hidden');
+            document.getElementById('feedback-status').textContent = 'Analyzing issue with Claude Code...';
+            document.getElementById('feedback-status').classList.add('animate-pulse');
+            document.getElementById('feedback-output').classList.add('hidden');
+
+            const res = await fetch(API + '/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    issue: issue,
+                    error_logs: logs || null,
+                    affected_file: file || null,
+                }),
+            });
+            const data = await res.json();
+
+            document.getElementById('feedback-status').classList.remove('animate-pulse');
+            document.getElementById('feedback-status').textContent = data.success ?
+                'Self-healing started! Check the logs for progress.' :
+                'Error: ' + data.message;
+            document.getElementById('feedback-status').className = data.success ?
+                'text-green-400' : 'text-red-400';
+        });
+
+        // Terminal command execution
+        document.getElementById('terminal-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('terminal-input');
+            const command = input.value.trim();
+            if (!command) return;
+
+            const output = document.getElementById('terminal-output');
+            output.innerHTML += `<div class="text-white">$ ${command}</div>`;
+            output.innerHTML += `<div class="text-gray-500">Running...</div>`;
+            output.scrollTop = output.scrollHeight;
+
+            const res = await fetch(API + '/api/execute-command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command }),
+            });
+            const data = await res.json();
+
+            // Remove "Running..." and show result
+            output.lastChild.remove();
+            if (data.stdout) {
+                output.innerHTML += `<div class="text-green-400 whitespace-pre-wrap">${data.stdout}</div>`;
+            }
+            if (data.stderr) {
+                output.innerHTML += `<div class="text-red-400 whitespace-pre-wrap">${data.stderr}</div>`;
+            }
+            if (!data.success) {
+                output.innerHTML += `<div class="text-red-500">Exit code: ${data.exit_code}</div>`;
+            }
+            output.scrollTop = output.scrollHeight;
+
+            input.value = '';
+        });
+
+        function runQuickCommand(cmd) {
+            document.getElementById('terminal-input').value = cmd;
+            document.getElementById('terminal-form').dispatchEvent(new Event('submit'));
+        }
+
+        async function restartServer() {
+            if (!confirm('Restart the server? The page will need to be refreshed after 5 seconds.')) return;
+
+            const res = await fetch(API + '/api/restart-server', { method: 'POST' });
+            const data = await res.json();
+
+            const output = document.getElementById('terminal-output');
+            output.innerHTML += `<div class="text-yellow-400">${data.message}</div>`;
+
+            if (data.success) {
+                setTimeout(() => {
+                    output.innerHTML += `<div class="text-blue-400">Refreshing page...</div>`;
+                    setTimeout(() => location.reload(), 2000);
+                }, 5000);
+            }
+        }
+
+        // Schedule form
+        function showScheduleForm() { document.getElementById('schedule-form').classList.remove('hidden'); }
+        function hideScheduleForm() { document.getElementById('schedule-form').classList.add('hidden'); }
+
+        // WebSocket connection
+        function connectWS() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws`);
+            ws.onmessage = (event) => handleUpdate(JSON.parse(event.data));
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+
+        function handleUpdate(data) {
+            if (data.type === 'task_created' || data.type === 'task_updated' || data.type === 'task_deleted') {
+                loadTasks();
+            }
+            // Handle self-healing completion
+            if (data.type === 'self_heal_complete') {
+                const result = data.result;
+                const status = document.getElementById('feedback-status');
+                const output = document.getElementById('feedback-output');
+
+                if (result.success) {
+                    status.textContent = 'Fix applied successfully! Refresh the page to see changes.';
+                    status.className = 'text-green-400';
+                } else {
+                    status.textContent = 'Could not automatically fix: ' + (result.message || 'Unknown error');
+                    status.className = 'text-yellow-400';
+                }
+
+                if (result.full_output || result.message) {
+                    output.textContent = result.full_output || result.message;
+                    output.classList.remove('hidden');
+                }
+
+                // Add to chat
+                const chat = document.getElementById('chat-container');
+                chat.innerHTML += `<div class="chat-bubble ${result.success ? 'bg-green-600' : 'bg-yellow-600'} text-white p-3 rounded-lg mb-4 max-w-xl">
+                    <strong>Self-Healing ${result.success ? 'Complete' : 'Report'}</strong><br>
+                    ${result.message?.substring(0, 200) || 'Check the feedback modal for details.'}
+                    ${result.success ? '<br><span class="text-sm">Refresh the page to see changes.</span>' : ''}
+                </div>`;
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('[id$="-tab"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-blue-400', 'border-b-2', 'border-blue-400');
+                el.classList.add('text-gray-400');
+            });
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            event.target.classList.add('text-blue-400', 'border-b-2', 'border-blue-400');
+            event.target.classList.remove('text-gray-400');
+
+            if (tabName === 'tasks') loadTasks();
+            if (tabName === 'mcps') loadMCPs();
+            if (tabName === 'schedule') loadSchedule();
+            if (tabName === 'logs') loadLogs();
+            if (tabName === 'settings') loadSettings();
+        }
+
+        // Load data functions
+        async function loadTasks() {
+            const res = await fetch(API + '/api/tasks');
+            const data = await res.json();
+            const list = document.getElementById('task-list');
+            document.getElementById('task-count').textContent = data.total;
+
+            if (data.tasks.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-center py-8">No tasks yet. Type what you need in the chat above!</p>';
+            } else {
+                list.innerHTML = data.tasks.map(t => `
+                    <div class="bg-gray-700 p-4 rounded mb-2">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="${getStateColor(t.state)} text-lg">${getStateIcon(t.state)}</span>
+                                    <span class="font-medium">${t.description}</span>
+                                </div>
+                                <div class="text-xs text-gray-400 ml-6 mb-2">
+                                    <span class="px-2 py-0.5 rounded ${getStateBadgeColor(t.state)}">${t.state}</span>
+                                    ${t.blocked_reason ? `<span class="ml-2 text-red-400">${t.blocked_reason}</span>` : ''}
+                                    ${t.result?.task_type ? `<span class="ml-2 text-blue-400">Type: ${t.result.task_type}</span>` : ''}
+                                </div>
+                                ${t.result ? renderTaskResult(t.result) : ''}
+                            </div>
+                            <div class="flex gap-2 ml-4 flex-shrink-0">
+                                ${t.state === 'pending' ? `<button onclick="executeTask('${t.id}')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm">Run</button>` : ''}
+                                ${t.state === 'in_progress' ? `<button onclick="cancelTask('${t.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm">Cancel</button>` : ''}
+                                ${t.state === 'blocked' ? `<button onclick="executeTask('${t.id}')" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-sm">Retry</button>` : ''}
+                                ${t.state === 'completed' ? `<button onclick="executeTask('${t.id}')" class="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm">Re-run</button>` : ''}
+                                <button onclick="viewTaskLogs('${t.id}')" class="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-sm">Logs</button>
+                                <button onclick="deleteTask('${t.id}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">X</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderTaskResult(result) {
+            if (!result) return '';
+
+            const resultId = 'result-' + Math.random().toString(36).substr(2, 9);
+
+            let html = '<div class="mt-3 border border-gray-700 rounded-lg overflow-hidden">';
+
+            // Status header - always visible, clickable to expand
+            html += '<div class="bg-gray-800 p-3 cursor-pointer hover:bg-gray-750" onclick="toggleResult(\'' + resultId + '\')">';
+            html += '<div class="flex items-center justify-between">';
+
+            if (result.status === 'blocked') {
+                html += '<div class="flex items-center gap-2"><span class="text-red-400 text-lg">!</span><span class="text-red-400">' + (result.message || 'Task blocked') + '</span></div>';
+                html += '<span class="text-gray-500 text-xs" id="' + resultId + '-toggle">Click to expand</span>';
+            } else if (result.status === 'error') {
+                html += '<div class="flex items-center gap-2"><span class="text-red-400 text-lg">✗</span><span class="text-red-400">Error: ' + (result.message || 'Unknown') + '</span></div>';
+                html += '<span class="text-gray-500 text-xs" id="' + resultId + '-toggle">Click to expand</span>';
+            } else {
+                // Success summary
+                let summary = result.message || 'Completed';
+                let count = '';
+                if (result.jobs && result.jobs.length > 0) {
+                    count = result.jobs.length + ' jobs found';
+                } else if (result.results && result.results.length > 0) {
+                    count = result.results.length + ' results';
+                }
+                html += '<div class="flex items-center gap-2">';
+                html += '<span class="text-green-400 text-lg">✓</span>';
+                html += '<span class="text-green-400 font-medium">' + summary + '</span>';
+                if (count) html += '<span class="text-gray-500 text-sm ml-2">(' + count + ')</span>';
+                html += '</div>';
+                html += '<span class="text-gray-500 text-xs" id="' + resultId + '-toggle">Click to expand ▼</span>';
+            }
+            html += '</div></div>';
+
+            // Collapsible content - AUTO-EXPAND when jobs are found
+            const hasJobs = result.jobs && Array.isArray(result.jobs) && result.jobs.length > 0;
+            html += '<div id="' + resultId + '" class="' + (hasJobs ? '' : 'hidden') + ' bg-gray-900 border-t border-gray-700">';
+
+            // WARNING BANNER if using fallback site
+            if (result.warning || result.fallback_used) {
+                html += '<div class="px-3 py-2 bg-yellow-900 border-b border-yellow-700 text-yellow-300 text-sm">';
+                html += '<span class="font-bold">⚠️ ' + (result.warning || 'Using alternative source') + '</span>';
+                if (result.original_site_requested) {
+                    html += '<span class="ml-2 text-yellow-400 text-xs">(You requested: ' + escapeHtml(result.original_site_requested) + ')</span>';
+                }
+                html += '</div>';
+            }
+
+            // Execution info - compact
+            if (result.execution) {
+                html += '<div class="px-3 py-2 bg-gray-850 border-b border-gray-700 flex flex-wrap gap-3 text-xs">';
+                if (result.execution.understood_goal) {
+                    html += '<span class="text-green-400">Goal: ' + result.execution.understood_goal + '</span>';
+                }
+                if (result.execution.agent) html += '<span class="text-purple-400">Agent: ' + result.execution.agent + '</span>';
+                if (result.execution.skill) html += '<span class="text-cyan-400">Skill: ' + result.execution.skill + '</span>';
+                if (result.execution.mcp) html += '<span class="text-blue-400">MCP: ' + result.execution.mcp + '</span>';
+                html += '</div>';
+            }
+
+            // Job listings - CLEAN cards with CLICKABLE titles (show INSTEAD of raw answer)
+            if (result.jobs && Array.isArray(result.jobs) && result.jobs.length > 0) {
+                // Skip raw answer when we have structured job data
+            } else if (result.answer && result.answer.length > 0 && result.answer !== 'Task completed') {
+                // Only show raw answer if no structured data
+                html += '<div class="p-3 border-b border-gray-700">';
+                html += '<div class="text-blue-300 text-xs font-medium mb-2">Answer:</div>';
+                html += '<div class="text-white text-sm whitespace-pre-wrap break-words">' + escapeHtml(result.answer).substring(0, 500) + '</div>';
+                html += '</div>';
+            }
+
+            // Job listings display with table view and export options
+            if (result.jobs && Array.isArray(result.jobs) && result.jobs.length > 0) {
+                // Store jobs data globally for export
+                window.currentJobsData = result.jobs;
+                const exportId = resultId + '-export';
+
+                html += '<div class="p-3">';
+
+                // Header with export buttons
+                html += '<div class="flex justify-between items-center mb-3">';
+                const sourceInfo = result.site ? ' from ' + result.site : '';
+                html += '<div class="text-gray-400 text-xs font-medium">Found ' + result.jobs.length + ' Jobs' + sourceInfo + ':</div>';
+                html += '<div class="flex gap-2">';
+                html += '<button onclick="exportJobsAsCSV()" class="px-3 py-1 bg-green-700 hover:bg-green-600 rounded text-xs font-medium flex items-center gap-1" title="Export as CSV">';
+                html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+                html += 'CSV</button>';
+                html += '<button onclick="exportJobsAsExcel()" class="px-3 py-1 bg-blue-700 hover:bg-blue-600 rounded text-xs font-medium flex items-center gap-1" title="Export as Excel">';
+                html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+                html += 'Excel</button>';
+                html += '<button onclick="copyJobsToClipboard()" class="px-3 py-1 bg-purple-700 hover:bg-purple-600 rounded text-xs font-medium flex items-center gap-1" title="Copy to clipboard for Google Sheets">';
+                html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>';
+                html += 'Copy</button>';
+                html += '</div></div>';
+
+                // Table view toggle
+                html += '<div class="flex gap-2 mb-3">';
+                html += '<button onclick="showJobsAsCards(\'' + resultId + '\')" id="' + resultId + '-cards-btn" class="px-3 py-1 bg-gray-700 rounded text-xs">Cards</button>';
+                html += '<button onclick="showJobsAsTable(\'' + resultId + '\')" id="' + resultId + '-table-btn" class="px-3 py-1 bg-gray-800 rounded text-xs">Table</button>';
+                html += '</div>';
+
+                // Cards view (default)
+                html += '<div id="' + resultId + '-cards" class="space-y-3">';
+                for (let i = 0; i < result.jobs.length; i++) {
+                    const job = result.jobs[i];
+                    const jobUrl = job.url || '#';
+                    if (jobUrl.includes('duckduckgo.com') || jobUrl.includes('bing.com/aclick') || jobUrl.includes('ad_domain=')) continue;
+
+                    html += '<div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-600 transition-colors">';
+
+                    // Job title
+                    const cleanTitle = cleanJobTitle(job.title);
+                    html += '<a href="' + jobUrl + '" target="_blank" rel="noopener" class="block group">';
+                    html += '<h4 class="text-blue-400 group-hover:text-blue-300 font-medium text-base break-words whitespace-normal">' + escapeHtml(cleanTitle) + '</h4>';
+                    html += '</a>';
+
+                    // Meta info row
+                    html += '<div class="flex flex-wrap gap-3 text-sm mt-2">';
+                    if (job.company) {
+                        html += '<span class="text-gray-400 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' + escapeHtml(decodeHtml(job.company)) + '</span>';
+                    }
+                    if (job.location) {
+                        html += '<span class="text-gray-500 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>' + escapeHtml(decodeHtml(job.location)) + '</span>';
+                    }
+                    if (job.salary) {
+                        html += '<span class="text-green-400 flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' + escapeHtml(job.salary) + '</span>';
+                    }
+                    if (job.experience) {
+                        html += '<span class="text-yellow-400">' + escapeHtml(job.experience) + '</span>';
+                    }
+                    html += '</div>';
+
+                    // Requirements section
+                    if (job.requirements && job.requirements.length > 0) {
+                        const validReqs = job.requirements.filter(r => r && r.trim().length > 5 && !r.includes('Click to view') && !r.includes('Visit the job page') && !r.includes('not found'));
+                        if (validReqs.length > 0) {
+                            html += '<div class="mt-3 pt-3 border-t border-gray-700">';
+                            html += '<div class="text-gray-400 text-xs font-semibold mb-2 uppercase tracking-wider">Requirements:</div>';
+                            html += '<ul class="space-y-1 text-sm text-gray-300">';
+                            for (let j = 0; j < Math.min(validReqs.length, 5); j++) {
+                                const req = decodeHtml(validReqs[j]).substring(0, 200);
+                                html += '<li class="flex items-start gap-2"><span class="text-green-400 mt-0.5 flex-shrink-0">✓</span><span class="break-words">' + escapeHtml(req) + '</span></li>';
+                            }
+                            if (validReqs.length > 5) html += '<li class="text-gray-500 italic pl-6">+' + (validReqs.length - 5) + ' more...</li>';
+                            html += '</ul></div>';
+                        }
+                    }
+
+                    // Skills section (separate from requirements)
+                    if (job.skills && job.skills.length > 0) {
+                        const validSkills = job.skills.filter(s => s && !s.includes('not explicitly'));
+                        if (validSkills.length > 0) {
+                            html += '<div class="mt-3 pt-3 border-t border-gray-700">';
+                            html += '<div class="text-gray-400 text-xs font-semibold mb-2 uppercase tracking-wider">Skills:</div>';
+                            html += '<div class="flex flex-wrap gap-2">';
+                            for (const skill of validSkills.slice(0, 12)) {
+                                html += '<span class="px-2 py-1 bg-blue-900 text-blue-300 rounded text-xs">' + escapeHtml(skill) + '</span>';
+                            }
+                            html += '</div></div>';
+                        }
+                    }
+
+                    // Apply button
+                    if (jobUrl && jobUrl !== '#') {
+                        html += '<div class="mt-4">';
+                        html += '<a href="' + jobUrl + '" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white text-sm font-medium transition-colors">';
+                        html += '<span>View Job & Apply</span>';
+                        html += '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+                        html += '</a></div>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div>';
+
+                // Table view (hidden by default)
+                html += '<div id="' + resultId + '-table" class="hidden overflow-x-auto">';
+                html += '<table class="w-full text-sm text-left">';
+                html += '<thead class="text-xs uppercase bg-gray-800 text-gray-400">';
+                html += '<tr>';
+                html += '<th class="px-3 py-2">Title</th>';
+                html += '<th class="px-3 py-2">Company</th>';
+                if (result.jobs.some(j => j.location)) html += '<th class="px-3 py-2">Location</th>';
+                if (result.jobs.some(j => j.salary)) html += '<th class="px-3 py-2">Salary</th>';
+                html += '<th class="px-3 py-2">Requirements</th>';
+                if (result.jobs.some(j => j.skills && j.skills.length > 0)) html += '<th class="px-3 py-2">Skills</th>';
+                html += '<th class="px-3 py-2">Link</th>';
+                html += '</tr></thead><tbody>';
+
+                for (const job of result.jobs) {
+                    const jobUrl = job.url || '#';
+                    if (jobUrl.includes('duckduckgo.com') || jobUrl.includes('bing.com/aclick')) continue;
+
+                    html += '<tr class="border-b border-gray-700 hover:bg-gray-800">';
+                    html += '<td class="px-3 py-2 font-medium text-blue-400 max-w-xs">' + escapeHtml(cleanJobTitle(job.title).substring(0, 60)) + '</td>';
+                    html += '<td class="px-3 py-2 text-gray-300">' + escapeHtml(job.company || '-') + '</td>';
+                    if (result.jobs.some(j => j.location)) html += '<td class="px-3 py-2 text-gray-400">' + escapeHtml(job.location || '-') + '</td>';
+                    if (result.jobs.some(j => j.salary)) html += '<td class="px-3 py-2 text-green-400">' + escapeHtml(job.salary || '-') + '</td>';
+
+                    // Requirements cell
+                    const reqs = (job.requirements || []).filter(r => r && !r.includes('not found') && !r.includes('Click to view')).slice(0, 3);
+                    html += '<td class="px-3 py-2 text-gray-300 text-xs max-w-md"><ul class="list-disc pl-4">';
+                    for (const req of reqs) html += '<li>' + escapeHtml(req.substring(0, 100)) + '</li>';
+                    html += '</ul></td>';
+
+                    // Skills cell
+                    if (result.jobs.some(j => j.skills && j.skills.length > 0)) {
+                        const skills = (job.skills || []).filter(s => !s.includes('not explicitly')).slice(0, 6);
+                        html += '<td class="px-3 py-2 text-xs"><div class="flex flex-wrap gap-1">';
+                        for (const skill of skills) html += '<span class="px-1 bg-blue-900 text-blue-300 rounded">' + escapeHtml(skill) + '</span>';
+                        html += '</div></td>';
+                    }
+
+                    html += '<td class="px-3 py-2"><a href="' + jobUrl + '" target="_blank" class="text-blue-400 hover:underline">Open</a></td>';
+                    html += '</tr>';
+                }
+                html += '</tbody></table></div>';
+                html += '</div>';
+            }
+
+            // Search results - compact list
+            if (result.results && Array.isArray(result.results) && result.results.length > 0) {
+                html += '<div class="p-3 border-t border-gray-700">';
+                html += '<div class="text-gray-400 text-xs font-medium mb-2">Search Results:</div>';
+                html += '<div class="space-y-2">';
+                for (let i = 0; i < Math.min(result.results.length, 5); i++) {
+                    const r = result.results[i];
+                    const title = r.title || 'Result ' + (i + 1);
+                    const url = r.url || '#';
+                    html += '<div class="flex items-start gap-2">';
+                    html += '<span class="text-gray-600 text-xs mt-1">' + (i + 1) + '.</span>';
+                    html += '<div>';
+                    html += '<a href="' + url + '" target="_blank" rel="noopener" class="text-blue-400 hover:underline text-sm">' + escapeHtml(title) + '</a>';
+                    if (r.snippet) {
+                        html += '<p class="text-gray-500 text-xs mt-0.5 line-clamp-2">' + escapeHtml(r.snippet.substring(0, 120)) + '</p>';
+                    }
+                    html += '</div></div>';
+                }
+                html += '</div></div>';
+            }
+
+            // Scraped content - collapsed by default
+            if (result.scraped || (result.relevant_content && result.relevant_content.length > 0)) {
+                const scrapedId = resultId + '-scraped';
+                html += '<div class="border-t border-gray-700">';
+                html += '<button onclick="toggleResult(\'' + scrapedId + '\')" class="w-full px-3 py-2 text-left text-xs text-gray-500 hover:bg-gray-800 flex justify-between items-center">';
+                html += '<span>Scraped Content</span><span id="' + scrapedId + '-toggle">▼</span>';
+                html += '</button>';
+                html += '<div id="' + scrapedId + '" class="hidden p-3">';
+                if (result.scraped) {
+                    html += '<div class="text-gray-400 text-xs mb-2">' + escapeHtml(result.scraped.title || '') + '</div>';
+                }
+                if (result.relevant_content) {
+                    html += '<div class="space-y-1 text-xs text-gray-400">';
+                    for (let i = 0; i < Math.min(result.relevant_content.length, 5); i++) {
+                        html += '<p class="border-l-2 border-gray-700 pl-2">' + escapeHtml(result.relevant_content[i]) + '</p>';
+                    }
+                    html += '</div>';
+                }
+                html += '</div></div>';
+            }
+
+            // Fallback link
+            if (result.search_url) {
+                html += '<div class="px-3 py-2 border-t border-gray-700">';
+                html += '<a href="' + result.search_url + '" target="_blank" class="text-blue-400 hover:underline text-xs flex items-center gap-1">';
+                html += '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+                html += 'Open in browser';
+                html += '</a></div>';
+            }
+
+            // Note
+            if (result.note) {
+                html += '<div class="px-3 py-2 text-gray-500 text-xs italic border-t border-gray-700">' + escapeHtml(result.note) + '</div>';
+            }
+
+            html += '</div></div>'; // Close collapsible and main container
+            return html;
+        }
+
+        // Helper functions for collapsible UI
+        function toggleResult(id) {
+            const el = document.getElementById(id);
+            const toggle = document.getElementById(id + '-toggle');
+            if (el) {
+                el.classList.toggle('hidden');
+                if (toggle) {
+                    toggle.textContent = el.classList.contains('hidden') ? 'Click to expand ▼' : 'Click to collapse ▲';
+                }
+            }
+        }
+
+        function toggleJobReqs(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            if (el) {
+                el.classList.toggle('hidden');
+                if (icon) {
+                    icon.textContent = el.classList.contains('hidden') ? '▶' : '▼';
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function decodeHtml(text) {
+            // Decode HTML entities like &amp; to &
+            if (!text) return '';
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+
+        function cleanJobTitle(title) {
+            // Decode HTML entities and clean up title
+            if (!title) return 'Untitled Job';
+            let clean = decodeHtml(title);
+            // Remove excess whitespace
+            clean = clean.replace(/\s+/g, ' ').trim();
+            return clean;
+        }
+
+        // Export functions for job data
+        function exportJobsAsCSV() {
+            if (!window.currentJobsData || window.currentJobsData.length === 0) {
+                alert('No job data to export');
+                return;
+            }
+
+            const jobs = window.currentJobsData;
+            const headers = ['Title', 'Company', 'Location', 'Salary', 'Requirements', 'Skills', 'URL'];
+            let csv = headers.join(',') + '\n';
+
+            for (const job of jobs) {
+                const row = [
+                    '"' + (cleanJobTitle(job.title) || '').replace(/"/g, '""') + '"',
+                    '"' + (job.company || '').replace(/"/g, '""') + '"',
+                    '"' + (job.location || '').replace(/"/g, '""') + '"',
+                    '"' + (job.salary || '').replace(/"/g, '""') + '"',
+                    '"' + (job.requirements || []).filter(r => r && !r.includes('not found')).join('; ').replace(/"/g, '""') + '"',
+                    '"' + (job.skills || []).filter(s => s && !s.includes('not explicitly')).join(', ').replace(/"/g, '""') + '"',
+                    '"' + (job.url || '') + '"'
+                ];
+                csv += row.join(',') + '\n';
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'jobs_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+        }
+
+        function exportJobsAsExcel() {
+            if (!window.currentJobsData || window.currentJobsData.length === 0) {
+                alert('No job data to export');
+                return;
+            }
+
+            // Create a simple HTML table that Excel can open
+            const jobs = window.currentJobsData;
+            let html = '<html><head><meta charset="utf-8"></head><body>';
+            html += '<table border="1">';
+            html += '<tr><th>Title</th><th>Company</th><th>Location</th><th>Salary</th><th>Requirements</th><th>Skills</th><th>URL</th></tr>';
+
+            for (const job of jobs) {
+                html += '<tr>';
+                html += '<td>' + escapeHtml(cleanJobTitle(job.title) || '') + '</td>';
+                html += '<td>' + escapeHtml(job.company || '') + '</td>';
+                html += '<td>' + escapeHtml(job.location || '') + '</td>';
+                html += '<td>' + escapeHtml(job.salary || '') + '</td>';
+                html += '<td>' + escapeHtml((job.requirements || []).filter(r => r && !r.includes('not found')).join('; ')) + '</td>';
+                html += '<td>' + escapeHtml((job.skills || []).filter(s => s && !s.includes('not explicitly')).join(', ')) + '</td>';
+                html += '<td>' + escapeHtml(job.url || '') + '</td>';
+                html += '</tr>';
+            }
+
+            html += '</table></body></html>';
+
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'jobs_' + new Date().toISOString().split('T')[0] + '.xls';
+            link.click();
+        }
+
+        function copyJobsToClipboard() {
+            if (!window.currentJobsData || window.currentJobsData.length === 0) {
+                alert('No job data to copy');
+                return;
+            }
+
+            const jobs = window.currentJobsData;
+            const headers = ['Title', 'Company', 'Location', 'Salary', 'Requirements', 'Skills', 'URL'];
+            let text = headers.join('\t') + '\n';
+
+            for (const job of jobs) {
+                const row = [
+                    cleanJobTitle(job.title) || '',
+                    job.company || '',
+                    job.location || '',
+                    job.salary || '',
+                    (job.requirements || []).filter(r => r && !r.includes('not found')).join('; '),
+                    (job.skills || []).filter(s => s && !s.includes('not explicitly')).join(', '),
+                    job.url || ''
+                ];
+                text += row.join('\t') + '\n';
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard! Paste into Google Sheets or Excel.');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Copied to clipboard! Paste into Google Sheets or Excel.');
+            });
+        }
+
+        // Toggle between card and table view
+        function showJobsAsCards(resultId) {
+            document.getElementById(resultId + '-cards').classList.remove('hidden');
+            document.getElementById(resultId + '-table').classList.add('hidden');
+            document.getElementById(resultId + '-cards-btn').classList.remove('bg-gray-800');
+            document.getElementById(resultId + '-cards-btn').classList.add('bg-gray-700');
+            document.getElementById(resultId + '-table-btn').classList.remove('bg-gray-700');
+            document.getElementById(resultId + '-table-btn').classList.add('bg-gray-800');
+        }
+
+        function showJobsAsTable(resultId) {
+            document.getElementById(resultId + '-cards').classList.add('hidden');
+            document.getElementById(resultId + '-table').classList.remove('hidden');
+            document.getElementById(resultId + '-cards-btn').classList.remove('bg-gray-700');
+            document.getElementById(resultId + '-cards-btn').classList.add('bg-gray-800');
+            document.getElementById(resultId + '-table-btn').classList.remove('bg-gray-800');
+            document.getElementById(resultId + '-table-btn').classList.add('bg-gray-700');
+        }
+
+        async function loadMCPs() {
+            const res = await fetch(API + '/api/mcps');
+            const data = await res.json();
+            document.getElementById('mcp-count').textContent = data.installed_count;
+            const list = document.getElementById('mcp-list');
+            list.innerHTML = data.mcps.map(m => `
+                <div class="bg-gray-700 p-4 rounded">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-semibold">${m.name}</h3>
+                        <span class="${m.installed ? 'text-green-400' : 'text-gray-500'}">${m.installed ? '✓ Installed' : '○'}</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-2">${m.description}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-gray-600 px-2 py-1 rounded">${m.category}</span>
+                        ${!m.installed ? `<button onclick="installMCP('${m.name}')" class="text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded">Install</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadSchedule() {
+            const res = await fetch(API + '/api/schedule');
+            const data = await res.json();
+            const list = document.getElementById('schedule-list');
+            if (data.length === 0) {
+                list.innerHTML = '<p class="text-gray-400">No scheduled tasks. Click "+ New Schedule" to create one.</p>';
+            } else {
+                list.innerHTML = data.map(s => `
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <div>
+                            <span class="font-semibold">${s.name}</span>
+                            <span class="text-gray-400 ml-2">${s.schedule_type}</span>
+                            <span class="text-gray-500 ml-2 text-sm">${s.intent}</span>
+                        </div>
+                        <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-300">Delete</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadLogs() {
+            const res = await fetch(API + '/api/logs?limit=100');
+            const data = await res.json();
+            const list = document.getElementById('logs-list');
+            if (data.logs.length === 0) {
+                list.innerHTML = '<p class="text-gray-400">No logs yet. Run a task to see logs.</p>';
+            } else {
+                list.innerHTML = data.logs.map(l => {
+                    let color = 'text-gray-300';
+                    let icon = '';
+                    if (l.level === 'ERROR') { color = 'text-red-400'; icon = 'X'; }
+                    else if (l.level === 'WARNING') { color = 'text-yellow-400'; icon = '!'; }
+                    else if (l.level === 'SUCCESS') { color = 'text-green-400'; icon = '✓'; }
+                    else if (l.level === 'INFO') { icon = '→'; }
+                    return `<div class="${color} py-0.5">${icon} [${l.timestamp.split('T')[1].split('.')[0]}] <span class="text-gray-500">${l.task_id.slice(-8)}:</span> ${l.message}</div>`;
+                }).join('');
+                list.scrollTop = list.scrollHeight;
+            }
+        }
+
+        async function loadSettings() {
+            const res = await fetch(API + '/api/preferences');
+            const data = await res.json();
+            document.getElementById('risk-tolerance').value = data.risk_tolerance || 'medium';
+            document.getElementById('auto-install').checked = data.auto_install_mcps || false;
+        }
+
+        // Helper functions
+        function getStateIcon(state) {
+            return { completed: '✓', in_progress: '◐', blocked: '!', pending: '○' }[state] || '○';
+        }
+        function getStateColor(state) {
+            return { completed: 'text-green-400', in_progress: 'text-blue-400', blocked: 'text-red-400', pending: 'text-yellow-400' }[state] || 'text-gray-400';
+        }
+        function getStateBadgeColor(state) {
+            return { completed: 'bg-green-900 text-green-300', in_progress: 'bg-blue-900 text-blue-300', blocked: 'bg-red-900 text-red-300', pending: 'bg-yellow-900 text-yellow-300' }[state] || 'bg-gray-600';
+        }
+
+        // Action functions
+        async function executeTask(id) {
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML += `<div class="chat-bubble bg-gray-600 text-white p-3 rounded-lg mb-4 max-w-xl"><em>Running task...</em></div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+            const res = await fetch(API + `/api/tasks/${id}/execute`, { method: 'POST' });
+            const data = await res.json();
+
+            let bgColor = 'bg-blue-600';
+            let message = '';
+
+            if (data.status === 'blocked') {
+                bgColor = 'bg-red-600';
+                message = `<strong>Task Blocked</strong><br>${data.message}`;
+            } else if (data.status === 'error') {
+                bgColor = 'bg-red-600';
+                message = `<strong>Error:</strong> ${data.message}`;
+            } else if (data.status === 'executing') {
+                bgColor = 'bg-blue-600';
+                message = `<strong>Task Executing</strong><br>
+                    Type: ${data.task_type}<br>
+                    ${data.mcps?.length ? `MCPs: ${data.mcps.join(', ')}<br>` : ''}
+                    <span class="text-blue-200 text-sm">${data.message}</span>`;
+                // Auto-refresh to show results
+                setTimeout(() => loadTasks(), 2000);
+            } else {
+                message = `<strong>Task Queued</strong><br>${data.message || 'Processing...'}`;
+            }
+
+            chat.innerHTML += `<div class="chat-bubble ${bgColor} text-white p-3 rounded-lg mb-4 max-w-xl">${message}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+            loadTasks();
+        }
+
+        async function completeTask(id) {
+            await fetch(API + `/api/tasks/${id}?state=completed`, { method: 'PUT' });
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML += `<div class="chat-bubble bg-green-600 text-white p-3 rounded-lg mb-4 max-w-xl">Task completed!</div>`;
+            chat.scrollTop = chat.scrollHeight;
+            loadTasks();
+        }
+
+        async function retryTask(id) {
+            await fetch(API + `/api/tasks/${id}?state=pending`, { method: 'PUT' });
+            loadTasks();
+            executeTask(id);
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Delete this task?')) return;
+            await fetch(API + `/api/tasks/${id}`, { method: 'DELETE' });
+            loadTasks();
+        }
+
+        async function viewTaskLogs(id) {
+            showTab('logs');
+            document.querySelector('[onclick*="showTab(\'logs\')"]').click();
+            const res = await fetch(API + `/api/tasks/${id}/logs`);
+            const data = await res.json();
+            const list = document.getElementById('logs-list');
+            list.innerHTML = `<h3 class="text-blue-400 mb-2 flex justify-between">
+                <span>Logs for task ${id.slice(-8)}:</span>
+                <button onclick="loadLogs()" class="text-sm text-gray-400 hover:text-white">View All Logs</button>
+            </h3>` +
+                (data.logs.length === 0 ? '<p class="text-gray-400">No logs for this task yet.</p>' :
+                data.logs.map(l => {
+                    let color = 'text-gray-300';
+                    let icon = '';
+                    if (l.level === 'ERROR') { color = 'text-red-400'; icon = 'X'; }
+                    else if (l.level === 'WARNING') { color = 'text-yellow-400'; icon = '!'; }
+                    else if (l.level === 'SUCCESS') { color = 'text-green-400'; icon = '✓'; }
+                    else if (l.level === 'INFO') { icon = '→'; }
+                    return `<div class="${color} py-0.5">${icon} [${l.timestamp.split('T')[1].split('.')[0]}] ${l.message}</div>`;
+                }).join(''));
+        }
+
+        async function installMCP(name) {
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML += `<div class="chat-bubble bg-gray-600 text-white p-3 rounded-lg mb-4 max-w-xl"><em>Installing ${name}... (this may take a minute)</em></div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+            const res = await fetch(API + `/api/mcps/${name}/install`, { method: 'POST' });
+            const data = await res.json();
+
+            chat.innerHTML += `<div class="chat-bubble ${data.success ? 'bg-green-600' : 'bg-red-600'} text-white p-3 rounded-lg mb-4 max-w-xl">
+                ${data.success ? `<strong>Installed ${name}</strong>` : `<strong>Failed to install ${name}</strong><br><span class="text-xs">${data.error?.substring(0, 200) || 'Unknown error'}</span>`}
+            </div>`;
+            chat.scrollTop = chat.scrollHeight;
+            loadMCPs();
+        }
+
+        async function createSchedule() {
+            const name = document.getElementById('schedule-name').value;
+            const intent = document.getElementById('schedule-intent').value;
+            const type = document.getElementById('schedule-type').value;
+            const time = document.getElementById('schedule-time').value;
+
+            if (!name || !intent) { alert('Please fill in name and intent'); return; }
+
+            await fetch(API + '/api/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, intent, schedule_type: type, run_at: time }),
+            });
+
+            hideScheduleForm();
+            loadSchedule();
+        }
+
+        async function deleteSchedule(id) {
+            if (!confirm('Delete this scheduled task?')) return;
+            await fetch(API + `/api/schedule/${id}`, { method: 'DELETE' });
+            loadSchedule();
+        }
+
+        async function clearAllTasks() {
+            if (!confirm('Clear all tasks and logs?')) return;
+            await fetch(API + '/api/tasks', { method: 'DELETE' });
+            loadTasks();
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML = `<div class="chat-bubble bg-blue-600 text-white p-3 rounded-lg mb-4 max-w-xl">
+                <p>All cleared! What would you like me to do?</p>
+                <p class="text-sm text-blue-200 mt-2">Try: "search best shoes in berlin" or "scrape headlines from bbc.com"</p>
+            </div>`;
+        }
+
+        // Quick search - fills input and submits
+        function quickSearch(query) {
+            const input = document.getElementById('intent-input');
+            input.value = query;
+            document.getElementById('task-form').dispatchEvent(new Event('submit'));
+        }
+
+        // Form handlers
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('intent-input');
+            const intent = input.value.trim();
+            if (!intent) return;
+
+            const chat = document.getElementById('chat-container');
+            chat.innerHTML += `<div class="chat-bubble bg-gray-700 text-white p-3 rounded-lg mb-4 max-w-xl ml-auto">${escapeHtml(intent)}</div>`;
+
+            chat.innerHTML += `<div class="chat-bubble bg-blue-600 text-white p-3 rounded-lg mb-4 max-w-xl animate-pulse" id="searching-indicator">
+                <p>🔍 Searching for jobs...</p>
+                <p class="text-xs text-blue-200 mt-1">Using Claude AI + RemoteOK API</p>
+            </div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+            const res = await fetch(API + '/api/task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ intent }),
+            });
+            const data = await res.json();
+
+            // Remove "Working on it..." and show status
+            const bubbles = chat.querySelectorAll('.chat-bubble');
+            const lastBubble = bubbles[bubbles.length - 1];
+            if (lastBubble && lastBubble.textContent.includes('Working on it')) {
+                lastBubble.classList.remove('animate-pulse');
+                lastBubble.innerHTML = `<p>Processing: <strong>${intent}</strong></p>
+                    <p class="text-sm text-blue-200 mt-1">Results will appear below shortly...</p>`;
+            }
+
+            input.value = '';
+
+            // Poll for results
+            setTimeout(() => loadTasks(), 1500);
+            setTimeout(() => loadTasks(), 3000);
+        });
+
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch(API + '/api/preferences', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    risk_tolerance: document.getElementById('risk-tolerance').value,
+                    auto_install_mcps: document.getElementById('auto-install').checked,
+                }),
+            });
+            alert('Preferences saved!');
+        });
+
+        // Initialize
+        connectWS();
+        loadTasks();
+        loadMCPs();
+    </script>
+</body>
+</html>

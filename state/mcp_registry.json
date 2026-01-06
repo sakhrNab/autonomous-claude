@@ -1,0 +1,13 @@
+{
+  "installed": [
+    "firecrawl",
+    "postgresql",
+    "brave-search",
+    "context7",
+    "playwright",
+    "filesystem",
+    "n8n"
+  ],
+  "server_count": 13,
+  "last_updated": "2026-01-05T23:32:23.802869"
+}

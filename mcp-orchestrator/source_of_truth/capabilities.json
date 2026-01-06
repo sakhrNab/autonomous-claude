@@ -1,0 +1,410 @@
+{
+  "planning-agent": {
+    "name": "planning-agent",
+    "type": "agent",
+    "description": "Analyzes tasks, creates plans, understands dependencies and can call other agents if needed for specific tasks",
+    "triggers": [
+      "plan",
+      "analyze",
+      "understand",
+      "design",
+      "architect"
+    ],
+    "dependencies": [],
+    "hooks_before": [
+      "load-context"
+    ],
+    "hooks_after": [
+      "save-plan",
+      "update-todo"
+    ],
+    "requires_web_search": true,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 10
+  },
+  "code-agent": {
+    "name": "code-agent",
+    "type": "agent",
+    "description": "Writes, modifies, and reviews code",
+    "triggers": [
+      "code",
+      "implement",
+      "create",
+      "build",
+      "fix",
+      "refactor"
+    ],
+    "dependencies": [],
+    "hooks_before": [
+      "load-context",
+      "check-design-patterns"
+    ],
+    "hooks_after": [
+      "run-tests",
+      "update-todo"
+    ],
+    "requires_web_search": false,
+    "requires_db_check": true,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 8
+  },
+  "testing-agent": {
+    "name": "testing-agent",
+    "type": "agent",
+    "description": "Writes and runs tests, verifies functionality",
+    "triggers": [
+      "test",
+      "verify",
+      "check",
+      "validate"
+    ],
+    "dependencies": [],
+    "hooks_before": [
+      "load-test-config"
+    ],
+    "hooks_after": [
+      "report-results",
+      "update-todo"
+    ],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": false,
+    "priority": 9
+  },
+  "ui-design-agent": {
+    "name": "ui-design-agent",
+    "type": "agent",
+    "description": "Designs and implements UI following design system",
+    "triggers": [
+      "ui",
+      "frontend",
+      "design",
+      "page",
+      "component",
+      "responsive"
+    ],
+    "dependencies": [],
+    "hooks_before": [
+      "load-design-system",
+      "check-ui-patterns"
+    ],
+    "hooks_after": [
+      "screenshot-test",
+      "update-todo"
+    ],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 7
+  },
+  "database-agent": {
+    "name": "database-agent",
+    "type": "agent",
+    "description": "Handles database operations, schema, migrations",
+    "triggers": [
+      "database",
+      "db",
+      "sql",
+      "schema",
+      "migration",
+      "query"
+    ],
+    "dependencies": [
+      "postgresql-mcp"
+    ],
+    "hooks_before": [
+      "backup-db"
+    ],
+    "hooks_after": [
+      "verify-migration",
+      "update-todo"
+    ],
+    "requires_web_search": false,
+    "requires_db_check": true,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 8
+  },
+  "web-search": {
+    "name": "web-search",
+    "type": "skill",
+    "description": "Searches the web for information",
+    "triggers": [
+      "search",
+      "find",
+      "lookup",
+      "latest",
+      "current"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": true,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 7
+  },
+  "web-scrape": {
+    "name": "web-scrape",
+    "type": "skill",
+    "description": "Scrapes websites for data",
+    "triggers": [
+      "scrape",
+      "extract",
+      "crawl",
+      "fetch from"
+    ],
+    "dependencies": [
+      "playwright-mcp"
+    ],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 6
+  },
+  "api-integration": {
+    "name": "api-integration",
+    "type": "skill",
+    "description": "Integrates with external APIs",
+    "triggers": [
+      "api",
+      "endpoint",
+      "rest",
+      "graphql",
+      "webhook"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [
+      "cache-response"
+    ],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": true,
+    "auto_test": true,
+    "priority": 7
+  },
+  "file-operations": {
+    "name": "file-operations",
+    "type": "skill",
+    "description": "File system operations",
+    "triggers": [
+      "file",
+      "read",
+      "write",
+      "create file",
+      "delete file"
+    ],
+    "dependencies": [
+      "filesystem-mcp"
+    ],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 5
+  },
+  "update-todo": {
+    "name": "update-todo",
+    "type": "hook",
+    "description": "Updates TODO.md after each task completion",
+    "triggers": [
+      "task-complete",
+      "step-done"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 10
+  },
+  "check-design-patterns": {
+    "name": "check-design-patterns",
+    "type": "hook",
+    "description": "Verifies code follows design patterns",
+    "triggers": [
+      "before-code",
+      "review"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 8
+  },
+  "load-design-system": {
+    "name": "load-design-system",
+    "type": "hook",
+    "description": "Loads UI design system before UI work",
+    "triggers": [
+      "before-ui",
+      "ui-start"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 9
+  },
+  "run-tests": {
+    "name": "run-tests",
+    "type": "hook",
+    "description": "Runs tests after code changes",
+    "triggers": [
+      "after-code",
+      "verify"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 10
+  },
+  "search-latest-version": {
+    "name": "search-latest-version",
+    "type": "hook",
+    "description": "Searches web for latest library/MCP versions",
+    "triggers": [
+      "new-library",
+      "new-mcp",
+      "install"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": true,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 9
+  },
+  "check-cache": {
+    "name": "check-cache",
+    "type": "hook",
+    "description": "Checks if data should be cached",
+    "triggers": [
+      "api-call",
+      "db-query",
+      "expensive-operation"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 7
+  },
+  "backup-db": {
+    "name": "backup-db",
+    "type": "hook",
+    "description": "Creates DB backup before migrations",
+    "triggers": [
+      "before-migration",
+      "schema-change"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 10
+  },
+  "postgresql-mcp": {
+    "name": "postgresql-mcp",
+    "type": "mcp",
+    "description": "PostgreSQL database operations",
+    "triggers": [
+      "postgres",
+      "postgresql",
+      "sql database"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 8
+  },
+  "playwright-mcp": {
+    "name": "playwright-mcp",
+    "type": "mcp",
+    "description": "Browser automation for scraping",
+    "triggers": [
+      "browser",
+      "playwright",
+      "scrape javascript"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 7
+  },
+  "brave-search-mcp": {
+    "name": "brave-search-mcp",
+    "type": "mcp",
+    "description": "Web search via Brave Search",
+    "triggers": [
+      "web search",
+      "search online"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 7
+  },
+  "filesystem-mcp": {
+    "name": "filesystem-mcp",
+    "type": "mcp",
+    "description": "File system operations",
+    "triggers": [
+      "file",
+      "directory",
+      "filesystem"
+    ],
+    "dependencies": [],
+    "hooks_before": [],
+    "hooks_after": [],
+    "requires_web_search": false,
+    "requires_db_check": false,
+    "requires_cache_check": false,
+    "auto_test": true,
+    "priority": 6
+  }
+}

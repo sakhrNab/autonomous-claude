@@ -1,13 +1,45 @@
 __pycache__/
+*.pyc
+*.pyo
+node_modules/
+
+# Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.development
-.env.test
-.env.production
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+
+# Runtime data - NOT code, should not be committed
+state/
+plans/
+logs/
+*.log
+*.jsonl
+
+# Task and execution state
+*_state.json
+task_logs.jsonl
+mcp_registry.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

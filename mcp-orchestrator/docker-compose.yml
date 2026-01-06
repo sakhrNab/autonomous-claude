@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Firecrawl - Open source web scraper (bypasses blocks, handles JS)
+  firecrawl:
+    image: mendableai/firecrawl
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+    environment:
+      - PORT=3002
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # The Autonomous Operator API
+  operator:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./state:/app/state
+      - ./logs:/app/logs
+    environment:
+      - FIRECRAWL_URL=http://firecrawl:3002
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - firecrawl
+    restart: unless-stopped
+
+  # Optional: Redis for caching (future)
+  # redis:
+  #   image: redis:alpine
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+
+  # Optional: PostgreSQL for persistent storage (future)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_USER: operator
+  #     POSTGRES_PASSWORD: operator
+  #     POSTGRES_DB: operator
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:

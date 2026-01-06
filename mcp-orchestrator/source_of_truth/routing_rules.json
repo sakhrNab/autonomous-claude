@@ -1,0 +1,115 @@
+[
+  {
+    "pattern": "(plan|design|architect|analyze)",
+    "category": "planning",
+    "primary_capability": "planning-agent",
+    "fallback_capabilities": [],
+    "always_search_web": true,
+    "always_check_db": false,
+    "hooks_to_trigger": [
+      "load-context"
+    ],
+    "requires_planning": false,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(scrape|crawl|extract from|get from website)",
+    "category": "web_scraping",
+    "primary_capability": "web-scrape",
+    "fallback_capabilities": [
+      "web-search"
+    ],
+    "always_search_web": false,
+    "always_check_db": false,
+    "hooks_to_trigger": [
+      "check-cache"
+    ],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(search|find|lookup|what is|how to)",
+    "category": "web_search",
+    "primary_capability": "web-search",
+    "fallback_capabilities": [],
+    "always_search_web": true,
+    "always_check_db": false,
+    "hooks_to_trigger": [],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(database|db|sql|query|migration|schema)",
+    "category": "database",
+    "primary_capability": "database-agent",
+    "fallback_capabilities": [],
+    "always_search_web": false,
+    "always_check_db": true,
+    "hooks_to_trigger": [
+      "backup-db",
+      "check-cache"
+    ],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(ui|frontend|page|component|design|responsive)",
+    "category": "ui_design",
+    "primary_capability": "ui-design-agent",
+    "fallback_capabilities": [],
+    "always_search_web": false,
+    "always_check_db": false,
+    "hooks_to_trigger": [
+      "load-design-system",
+      "check-design-patterns"
+    ],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(test|verify|check|validate|assert)",
+    "category": "testing",
+    "primary_capability": "testing-agent",
+    "fallback_capabilities": [],
+    "always_search_web": false,
+    "always_check_db": false,
+    "hooks_to_trigger": [],
+    "requires_planning": true,
+    "requires_testing": false,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(api|endpoint|rest|graphql)",
+    "category": "api_call",
+    "primary_capability": "api-integration",
+    "fallback_capabilities": [],
+    "always_search_web": false,
+    "always_check_db": true,
+    "hooks_to_trigger": [
+      "check-cache"
+    ],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  },
+  {
+    "pattern": "(code|implement|create|build|fix|refactor)",
+    "category": "code_generation",
+    "primary_capability": "code-agent",
+    "fallback_capabilities": [],
+    "always_search_web": false,
+    "always_check_db": false,
+    "hooks_to_trigger": [
+      "check-design-patterns",
+      "run-tests"
+    ],
+    "requires_planning": true,
+    "requires_testing": true,
+    "max_iterations": 10
+  }
+]

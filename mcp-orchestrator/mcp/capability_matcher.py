@@ -53,14 +53,17 @@ class CapabilityMatcher:
     def __init__(self, registry: Optional[MCPRegistry] = None):
         self.registry = registry or MCPRegistry()
 
-        # Intent patterns → task types
+        # Intent patterns -> task types
         self.intent_patterns = {
             "scrape": [
+                r"scrape\s+",  # Any scrape intent
                 r"scrape\s+(?:this\s+)?(?:the\s+)?(?:website|site|page|url)",
+                r"scrape\s+.+\s+from",  # scrape X from Y
                 r"extract\s+(?:data\s+)?from",
                 r"crawl\s+(?:this\s+)?(?:the\s+)?",
                 r"get\s+(?:the\s+)?content\s+from",
                 r"parse\s+(?:this\s+)?(?:the\s+)?",
+                r"fetch\s+(?:data\s+)?from",
             ],
             "database": [
                 r"query\s+(?:the\s+)?database",
@@ -70,10 +73,49 @@ class CapabilityMatcher:
                 r"run\s+(?:this\s+)?sql",
             ],
             "search": [
-                r"search\s+(?:for|the\s+web)",
-                r"find\s+(?:information|articles|pages)",
-                r"look\s+up",
-                r"google\s+(?:for)?",
+                # Direct search commands
+                r"^search\b",
+                r"search\s+",
+                r"^find\b",
+                r"find\s+",
+                r"^look\s*(?:up|for|ing)",
+                r"^google\b",
+
+                # Questions - these are almost always searches
+                r"^what\s+",
+                r"^where\s+",
+                r"^how\s+",
+                r"^who\s+",
+                r"^when\s+",
+                r"^why\s+",
+                r"^which\s+",
+                r"^can\s+(?:i|you)",
+                r"^is\s+there",
+                r"^are\s+there",
+
+                # Requests for information
+                r"^(?:give|show|get|tell)\s+me",
+                r"^i\s+(?:want|need|looking\s+for)",
+                r"^(?:i'm|im)\s+looking\s+for",
+
+                # Shopping/price queries
+                r"cheap(?:est)?\s+",
+                r"best\s+",
+                r"top\s+\d*",
+                r"price[s]?\s+",
+                r"cost\s+(?:of|for)",
+                r"buy\s+",
+                r"shop\s+(?:for)?",
+                r"purchase\s+",
+                r"order\s+",
+                r"compare\s+",
+                r"review[s]?\s+",
+                r"rating[s]?\s+",
+                r"recommend",
+
+                # Location-based queries
+                r"(?:in|near|around)\s+\w+$",  # ends with "in berlin", "near tokyo"
+                r"(?:restaurants?|hotels?|shops?|stores?|places?)\s+(?:in|near)",
             ],
             "automate": [
                 r"automate\s+(?:this|the)",
@@ -83,7 +125,9 @@ class CapabilityMatcher:
                 r"set\s+up\s+(?:a\s+)?(?:pipeline|flow)",
             ],
             "deploy": [
-                r"deploy\s+(?:this|to)",
+                r"deploy\s+",  # Any deploy intent
+                r"deploy\s+(?:this|to|the)",
+                r"deploy\s+.+\s+to\s+(?:production|staging)",
                 r"push\s+to\s+(?:production|staging)",
                 r"release\s+(?:this|version)",
                 r"ship\s+(?:this|it)",
@@ -115,7 +159,8 @@ class CapabilityMatcher:
                 r"review\s+(?:the\s+)?(?:pr|code)",
             ],
             "docs": [
-                r"(?:get|find|check)\s+(?:the\s+)?(?:docs|documentation)",
+                r"(?:get|find|check|read)\s+(?:the\s+)?(?:docs|documentation)",
+                r"read\s+(?:the\s+)?documentation",
                 r"how\s+(?:do\s+I|to)\s+use",
                 r"what\s+(?:is|are)\s+the\s+(?:api|methods)",
                 r"latest\s+(?:version|docs)",
@@ -175,16 +220,24 @@ class CapabilityMatcher:
         optional_mcps = []
         missing_mcps = []
 
-        # Add primary MCPs
+        # Add primary MCPs - task can proceed if ANY ONE is installed
         seen_mcps = set()
-        for mcp_name in required_mcp_names[:2]:  # Top 2 required
+        has_any_installed = False
+
+        for mcp_name in required_mcp_names[:3]:  # Check top 3
             match = self._create_match(mcp_name)
             if match:
                 seen_mcps.add(mcp_name)
                 if match.is_installed:
                     required_mcps.append(match)
+                    has_any_installed = True
                 else:
-                    missing_mcps.append(match)
+                    # Only add to missing if we don't have ANY installed
+                    optional_mcps.append(match)  # Treat as optional suggestion
+
+        # If no primary MCPs are installed, mark first one as missing (required)
+        if not has_any_installed and optional_mcps:
+            missing_mcps.append(optional_mcps.pop(0))
 
         # Add registry matches as optional
         for server, score in registry_matches:
@@ -193,7 +246,7 @@ class CapabilityMatcher:
                 if match:
                     if match.is_installed:
                         optional_mcps.append(match)
-                    elif score > 0.4:
+                    elif score > 0.4 and not has_any_installed:
                         missing_mcps.append(match)
 
         # Get suggested skills

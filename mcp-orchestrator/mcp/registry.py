@@ -100,21 +100,30 @@ class MCPRegistry:
     This is the brain for capability awareness.
     """
 
-    def __init__(self, storage_path: str = "state/mcp_registry.json"):
-        self.storage_path = Path(storage_path)
+    def __init__(self, storage_path: Optional[str] = None):
+        # Use absolute path relative to project root
+        if storage_path:
+            self.storage_path = Path(storage_path)
+        else:
+            # Default to state folder in project root
+            project_root = Path(__file__).parent.parent.parent
+            self.storage_path = project_root / "state" / "mcp_registry.json"
+
         self.servers: Dict[str, MCPServer] = {}
         self.installed: Set[str] = set()
+        self._load()  # Load saved state FIRST (before servers init overwrites it)
         self._initialize_builtin_servers()
-        self._load()
 
     def _initialize_builtin_servers(self):
         """Initialize with known MCP servers."""
 
-        # Playwright - Browser automation
+        # Playwright - Official Microsoft browser automation MCP
+        # Source: https://github.com/microsoft/playwright-mcp
+        # npm: https://www.npmjs.com/package/@playwright/mcp
         self.register(MCPServer(
             name="playwright",
-            package="@anthropic/mcp-server-playwright",
-            description="Browser automation for web scraping, testing, and interaction",
+            package="@playwright/mcp",
+            description="Official Microsoft Playwright MCP - Browser automation using accessibility tree (fast, no vision needed)",
             category=MCPCategory.BROWSER,
             capabilities=[
                 MCPCapability(
@@ -124,7 +133,7 @@ class MCPRegistry:
                 ),
                 MCPCapability(
                     name="scrape",
-                    description="Scrape web page content",
+                    description="Scrape web page content via accessibility snapshots",
                     keywords=["scrape", "extract", "get content", "crawl", "parse"],
                 ),
                 MCPCapability(
@@ -138,19 +147,19 @@ class MCPRegistry:
                     keywords=["click", "type", "fill", "submit", "interact", "form"],
                 ),
             ],
-            install_command="npm install -g @anthropic/mcp-server-playwright",
+            install_command="npx @playwright/mcp@latest",
             config_template={
                 "command": "npx",
-                "args": ["-y", "@anthropic/mcp-server-playwright"],
+                "args": ["@playwright/mcp@latest"],
             },
-            keywords=["browser", "web", "scrape", "automation", "playwright", "website", "page"],
+            keywords=["browser", "web", "scrape", "automation", "playwright", "website", "page", "microsoft"],
             official=True,
         ))
 
         # PostgreSQL - Database
         self.register(MCPServer(
             name="postgresql",
-            package="@anthropic/mcp-server-postgres",
+            package="@modelcontextprotocol/server-postgres",
             description="PostgreSQL database integration with schema inspection and queries",
             category=MCPCategory.DATABASE,
             capabilities=[
@@ -165,10 +174,10 @@ class MCPRegistry:
                     keywords=["schema", "tables", "columns", "structure"],
                 ),
             ],
-            install_command="npm install -g @anthropic/mcp-server-postgres",
+            install_command="npm install @modelcontextprotocol/server-postgres",
             config_template={
                 "command": "npx",
-                "args": ["-y", "@anthropic/mcp-server-postgres", "postgresql://user:pass@host:5432/db"],
+                "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:pass@host:5432/db"],
             },
             keywords=["postgres", "postgresql", "database", "sql", "db"],
             official=True,
@@ -219,7 +228,7 @@ class MCPRegistry:
                     keywords=["docs", "documentation", "library", "api", "reference"],
                 ),
             ],
-            install_command="npm install -g @upstash/context7-mcp",
+            install_command="npm install @upstash/context7-mcp",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@upstash/context7-mcp"],
@@ -250,7 +259,7 @@ class MCPRegistry:
                     keywords=["list", "directory", "folder", "files"],
                 ),
             ],
-            install_command="npm install -g @modelcontextprotocol/server-filesystem",
+            install_command="npm install @modelcontextprotocol/server-filesystem",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"],
@@ -282,7 +291,7 @@ class MCPRegistry:
                     keywords=["pr", "pull request", "merge", "review"],
                 ),
             ],
-            install_command="npm install -g @modelcontextprotocol/server-github",
+            install_command="npm install @modelcontextprotocol/server-github",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-github"],
@@ -305,7 +314,7 @@ class MCPRegistry:
                     keywords=["search", "find", "lookup", "google", "web"],
                 ),
             ],
-            install_command="npm install -g @modelcontextprotocol/server-brave-search",
+            install_command="npm install @modelcontextprotocol/server-brave-search",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-brave-search"],
@@ -333,7 +342,7 @@ class MCPRegistry:
                     keywords=["extract", "parse", "data", "content"],
                 ),
             ],
-            install_command="npm install -g firecrawl-mcp",
+            install_command="npm install firecrawl-mcp",
             config_template={
                 "command": "npx",
                 "args": ["firecrawl-mcp"],
@@ -360,7 +369,7 @@ class MCPRegistry:
                     keywords=["read", "messages", "history", "channel"],
                 ),
             ],
-            install_command="npm install -g @modelcontextprotocol/server-slack",
+            install_command="npm install @modelcontextprotocol/server-slack",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-slack"],
@@ -388,7 +397,7 @@ class MCPRegistry:
                     keywords=["image", "build", "pull", "push"],
                 ),
             ],
-            install_command="npm install -g docker-mcp",
+            install_command="npm install docker-mcp",
             config_template={
                 "command": "npx",
                 "args": ["docker-mcp"],
@@ -409,7 +418,7 @@ class MCPRegistry:
                     keywords=["actor", "scraper", "crawler", "extractor"],
                 ),
             ],
-            install_command="npm install -g @apify/mcp-server",
+            install_command="npm install @apify/mcp-server",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@apify/mcp-server"],
@@ -431,7 +440,7 @@ class MCPRegistry:
                     keywords=["scenario", "automation", "integrate"],
                 ),
             ],
-            install_command="npm install -g make-mcp-server",
+            install_command="npm install make-mcp-server",
             config_template={
                 "command": "npx",
                 "args": ["make-mcp-server"],
@@ -453,7 +462,7 @@ class MCPRegistry:
                     keywords=["search", "find", "lookup", "query"],
                 ),
             ],
-            install_command="npm install -g @exa/mcp-server",
+            install_command="npm install @exa/mcp-server",
             config_template={
                 "command": "npx",
                 "args": ["-y", "@exa/mcp-server"],

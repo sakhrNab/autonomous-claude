@@ -1,0 +1,22 @@
+{
+  "name": "ralph-wiggum",
+  "version": "1.0.0",
+  "description": "Iterative loop pattern - keeps working until completion promise is found",
+  "author": "MCP Orchestrator",
+  "hooks": {
+    "Stop": "./stop-hook.sh"
+  },
+  "skills": ["ralph-loop"],
+  "configuration": {
+    "max_iterations": {
+      "type": "number",
+      "default": 50,
+      "description": "Maximum iterations before stopping"
+    },
+    "completion_promise": {
+      "type": "string",
+      "default": "DONE",
+      "description": "Text that signals task completion"
+    }
+  }
+}

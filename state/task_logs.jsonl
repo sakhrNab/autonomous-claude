@@ -1,0 +1,114 @@
+{"timestamp": "2026-01-05T22:50:18.621770", "task_id": "task_50637c7d", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.622947", "task_id": "task_50637c7d", "level": "INFO", "message": "User intent: Find latest AI news", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.624070", "task_id": "task_50637c7d", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.624891", "task_id": "task_50637c7d", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.625494", "task_id": "task_50637c7d", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.626784", "task_id": "task_50637c7d", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.627587", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T22:50:18.636610", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T22:50:28.748780", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T22:50:28.764906", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T22:51:11.886058", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.347521", "task_id": "task_20260105_225018_627233", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.351244", "task_id": "task_50637c7d", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.352292", "task_id": "task_50637c7d", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.353195", "task_id": "task_50637c7d", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.354073", "task_id": "task_50637c7d", "level": "INFO", "message": "Goal understood: Find latest AI news", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.354825", "task_id": "task_50637c7d", "level": "INFO", "message": "Category: web_search", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.355542", "task_id": "task_50637c7d", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T22:51:16.357841", "task_id": "task_50637c7d", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.112735", "task_id": "task_c02a8041", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.113396", "task_id": "task_c02a8041", "level": "INFO", "message": "User intent: Scrape headlines from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.113904", "task_id": "task_c02a8041", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.114377", "task_id": "task_c02a8041", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.115007", "task_id": "task_c02a8041", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.115507", "task_id": "task_c02a8041", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.116054", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T23:19:40.116494", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:19:48.916396", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:19:48.917407", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T23:20:00.737025", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.701357", "task_id": "task_20260105_231940_115814", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.703147", "task_id": "task_c02a8041", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.703726", "task_id": "task_c02a8041", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.704323", "task_id": "task_c02a8041", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, BEFORE:check-cache, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.704787", "task_id": "task_c02a8041", "level": "INFO", "message": "Goal understood: Scrape headlines from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.705364", "task_id": "task_c02a8041", "level": "INFO", "message": "Category: web_scraping", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.705816", "task_id": "task_c02a8041", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T23:20:02.707339", "task_id": "task_c02a8041", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.285598", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.286499", "task_id": "task_ea48d2d4", "level": "INFO", "message": "User intent: Scrape headlines from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.287032", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.287579", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.288086", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.288578", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.289110", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T23:23:07.289844", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:23:19.329910", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:23:19.330801", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T23:23:29.881960", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.886762", "task_id": "task_20260105_232307_288860", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.888631", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.889133", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.889674", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, BEFORE:check-cache, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.890286", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Goal understood: Scrape headlines from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.890821", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Category: web_scraping", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.891355", "task_id": "task_ea48d2d4", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T23:23:31.892841", "task_id": "task_ea48d2d4", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.688210", "task_id": "task_06e9832d", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.688796", "task_id": "task_06e9832d", "level": "INFO", "message": "User intent: Scrape headlines from techcrunch.com", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.689414", "task_id": "task_06e9832d", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.690008", "task_id": "task_06e9832d", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.690686", "task_id": "task_06e9832d", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.691275", "task_id": "task_06e9832d", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.691913", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T23:24:15.692521", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:24:30.849644", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:24:30.850508", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T23:24:43.242083", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.690386", "task_id": "task_20260105_232415_691644", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.692371", "task_id": "task_06e9832d", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.692908", "task_id": "task_06e9832d", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.693366", "task_id": "task_06e9832d", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, BEFORE:check-cache, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.693831", "task_id": "task_06e9832d", "level": "INFO", "message": "Goal understood: Scrape headlines from techcrunch.com", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.694256", "task_id": "task_06e9832d", "level": "INFO", "message": "Category: web_scraping", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.694678", "task_id": "task_06e9832d", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T23:24:45.696088", "task_id": "task_06e9832d", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.642901", "task_id": "task_e22367d0", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.643446", "task_id": "task_e22367d0", "level": "INFO", "message": "User intent: Scrape content from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.643846", "task_id": "task_e22367d0", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.644274", "task_id": "task_e22367d0", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.644689", "task_id": "task_e22367d0", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.645203", "task_id": "task_e22367d0", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.645701", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T23:30:42.646221", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:30:50.650831", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:30:50.651718", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T23:31:01.100211", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.395592", "task_id": "task_20260105_233042_645500", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.397570", "task_id": "task_e22367d0", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.397966", "task_id": "task_e22367d0", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.398465", "task_id": "task_e22367d0", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, BEFORE:check-cache, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.398820", "task_id": "task_e22367d0", "level": "INFO", "message": "Goal understood: Scrape content from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.399170", "task_id": "task_e22367d0", "level": "INFO", "message": "Category: web_scraping", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.399881", "task_id": "task_e22367d0", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T23:31:03.401873", "task_id": "task_e22367d0", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.232835", "task_id": "task_f8d374b5", "level": "INFO", "message": "Starting FULL orchestration flow...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.233399", "task_id": "task_f8d374b5", "level": "INFO", "message": "User intent: Scrape content from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.233881", "task_id": "task_f8d374b5", "level": "INFO", "message": "Step 1: Consulting Source of Truth...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.234424", "task_id": "task_f8d374b5", "level": "INFO", "message": "Step 2: Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.234839", "task_id": "task_f8d374b5", "level": "INFO", "message": "Step 3: Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.235362", "task_id": "task_f8d374b5", "level": "INFO", "message": "Step 4: Executing with Ralph Wiggum retries...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.236077", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Consulting Source of Truth for routing...", "details": {}}
+{"timestamp": "2026-01-05T23:31:41.236526", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Creating execution plan...", "details": {}}
+{"timestamp": "2026-01-05T23:32:07.335406", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Running BEFORE hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:32:07.336454", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Executing plan (Ralph Wiggum pattern)...", "details": {}}
+{"timestamp": "2026-01-05T23:32:21.974243", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Running AFTER hooks...", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.915687", "task_id": "task_20260105_233141_235712", "level": "INFO", "message": "Updating TODO.md...", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.917622", "task_id": "task_f8d374b5", "level": "INFO", "message": "Promise: <Promise>DONE</Promise>", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.918035", "task_id": "task_f8d374b5", "level": "INFO", "message": "Status: done", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.918495", "task_id": "task_f8d374b5", "level": "INFO", "message": "Hooks fired: BEFORE:load-design-system, BEFORE:check-design-patterns, BEFORE:check-cache, AFTER:update-todo, AFTER:run-tests, ON_COMPLETE:check-completion", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.918998", "task_id": "task_f8d374b5", "level": "INFO", "message": "Goal understood: Scrape content from bbc.com", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.919606", "task_id": "task_f8d374b5", "level": "INFO", "message": "Category: web_scraping", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.920019", "task_id": "task_f8d374b5", "level": "INFO", "message": "Complexity: medium", "details": {}}
+{"timestamp": "2026-01-05T23:32:23.921700", "task_id": "task_f8d374b5", "level": "SUCCESS", "message": "Task completed: <Promise>DONE</Promise>", "details": {}}

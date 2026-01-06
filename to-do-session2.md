@@ -101,17 +101,69 @@ Updated: 2026-01-05T14:00:00Z
     Evidence: completion-checker.py only allows stop when ALL tasks complete
     Autonomous operation with minimal interruption
 
+## Session 3: UI, Telegram, and MCP Discovery
+
+[x] 21. MCP Registry and Discovery System
+    Evidence: mcp-orchestrator/mcp/registry.py
+    Features: 13+ MCP servers registered, keyword-based matching, category filtering
+    Servers: playwright, postgresql, n8n, context7, filesystem, github, brave-search,
+             firecrawl, slack, docker, apify, make, exa
+
+[x] 22. Capability Matcher (Intent to MCP mapping)
+    Evidence: mcp-orchestrator/mcp/capability_matcher.py
+    Features: Regex-based intent detection, task type classification
+    Task types: scrape, database, search, automate, deploy, notify, monitor, file, git, docs
+
+[x] 23. Auto-Install Hook for MCPs
+    Evidence: .claude/hooks/mcp-auto-install.py
+    Features: PreToolUse hook, automatic MCP installation when needed
+
+[x] 24. Web UI for Orchestrator
+    Evidence: mcp-orchestrator/api/server.py
+    Features: FastAPI server, real-time WebSocket updates, Tailwind CSS UI
+    Endpoints: /api/status, /api/task, /api/tasks, /api/mcps, /api/schedule, /api/preferences
+
+[x] 25. Telegram Bot Integration
+    Evidence: mcp-orchestrator/integrations/telegram_bot.py
+    Commands: /start, /status, /tasks, /mcps, /schedule, /settings, /help, /authorize
+    Features: Task creation from natural language, voice message placeholder,
+              inline buttons, authorization system, webhook + polling modes
+
+[x] 26. Scheduling UI Integration
+    Evidence: Web UI at /api/schedule + frontend scheduling modal
+
+[x] 27. Test MCP System
+    Evidence: mcp-orchestrator/tests/test_mcp_system.py
+    Tests: Registry, Capability Matcher, Intent Mapping, Missing MCP Detection, Can Handle
+    Result: 5/5 tests passed
+
 ## Summary
 
-ALL 20 TASKS COMPLETE.
-END GOAL ACHIEVED: A trusted, conversation-driven autonomous operator.
+ALL 27 TASKS COMPLETE.
+END GOAL ACHIEVED: A trusted, conversation-driven autonomous operator with:
+- Full Web UI for task management and scheduling
+- Telegram bot for remote control via phone
+- Intelligent MCP discovery and auto-install
+- Intent-to-MCP capability mapping
 
-Files created:
+Files created (Session 3):
+- mcp-orchestrator/mcp/registry.py (MCP server registry)
+- mcp-orchestrator/mcp/capability_matcher.py (Intent analysis)
+- mcp-orchestrator/mcp/__init__.py
+- mcp-orchestrator/api/server.py (FastAPI web server)
+- mcp-orchestrator/api/__init__.py
+- mcp-orchestrator/integrations/telegram_bot.py
+- mcp-orchestrator/integrations/__init__.py
+- mcp-orchestrator/tests/test_mcp_system.py
+- .claude/hooks/mcp-auto-install.py
+- requirements.txt
+
+Previous Files:
 - .claude/settings.json (Claude Code hook configuration)
-- .claude/hooks/*.py (6 hook scripts)
+- .claude/hooks/*.py (6+ hook scripts)
 - .claude/skills/autonomous-operator/SKILL.md
 - mcp-orchestrator/state/preference_learner.py
 - mcp-orchestrator/tests/test_autonomous_flow.py
 - USAGE.md
 
-Total: 60+ Python files implementing the full autonomous MCP orchestrator.
+Total: 70+ Python files implementing the full autonomous MCP orchestrator.

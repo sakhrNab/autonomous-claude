@@ -1,0 +1,86 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | { read cmd; if echo \"$cmd\" | grep -qE '^git (commit|push|reset --hard|rebase|merge)'; then echo 'BLOCKED: Git operations (commit/push/reset/rebase/merge) require explicit user confirmation.' >&2; exit 1; fi; exit 0; }"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // \"\"' | { read file; if echo \"$file\" | grep -qE '\\.(env|pem|key|credentials|secret)'; then echo 'WARNING: Modifying sensitive file - please confirm.' >&2; fi; exit 0; }"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude && echo \"[$(date '+%H:%M:%S')] Modified: $(jq -r '.tool_input.file_path // \"unknown\"')\" >> .claude/activity.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | { read cmd; mkdir -p .claude; echo \"[$(date '+%H:%M:%S')] Executed: ${cmd:0:100}\" >> .claude/activity.log; }"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude && echo \"[$(date '+%H:%M:%S')] Agent completed task\" >> .claude/activity.log"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude && echo '' >> .claude/activity.log && echo '========================================' >> .claude/activity.log && echo \"Session started: $(date)\" >> .claude/activity.log && echo '========================================' >> .claude/activity.log"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude && echo \"Session ended: $(date)\" >> .claude/activity.log && echo '' >> .claude/activity.log"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f .claude/ralph-state.json ]; then .claude/plugins/ralph-wiggum/stop-hook.sh; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
